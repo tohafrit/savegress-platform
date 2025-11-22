@@ -22,6 +22,12 @@ rsync -avz --progress \
   "$(dirname "$0")/../" \
   "${SERVER_USER}@${SERVER_IP}:${SERVER_PATH}/"
 
+# Sync .env.production to server as .env
+if [ -f "$(dirname "$0")/../.env.production" ]; then
+  echo ">>> Syncing .env.production to server..."
+  scp "$(dirname "$0")/../.env.production" "${SERVER_USER}@${SERVER_IP}:${SERVER_PATH}/.env"
+fi
+
 # Ensure .env symlink exists in docker folder
 echo ">>> Ensuring .env symlink..."
 ssh "${SERVER_USER}@${SERVER_IP}" "ln -sf ${SERVER_PATH}/.env ${SERVER_PATH}/docker/.env 2>/dev/null || true"
