@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,9 +22,13 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAACCXwGR68idJikxS"
+
 export function EarlyAccessForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileInstance>(null)
 
   const {
     register,
@@ -36,13 +41,18 @@ export function EarlyAccessForm() {
   })
 
   const onSubmit = async (data: FormData) => {
+    if (!turnstileToken) {
+      alert('Please complete the verification')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/early-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, turnstileToken }),
       })
 
       if (!response.ok) {
@@ -51,6 +61,8 @@ export function EarlyAccessForm() {
 
       setIsSuccess(true)
       reset()
+      setTurnstileToken(null)
+      turnstileRef.current?.reset()
 
       setTimeout(() => {
         setIsSuccess(false)
@@ -150,6 +162,17 @@ export function EarlyAccessForm() {
             {...register("message")}
             className="mt-1"
             rows={4}
+          />
+        </div>
+
+        {/* Turnstile CAPTCHA */}
+        <div className="flex justify-center">
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={TURNSTILE_SITE_KEY}
+            onSuccess={setTurnstileToken}
+            onError={() => setTurnstileToken(null)}
+            onExpire={() => setTurnstileToken(null)}
           />
         </div>
 

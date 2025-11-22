@@ -3,6 +3,28 @@ import { z } from 'zod'
 import { prisma } from '../services/database.service'
 import { sendEarlyAccessEmail } from '../services/email.service'
 
+const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY || '0x4AAAAAACCXwEK23TURNS62usztaHWOSnE'
+
+async function verifyTurnstileToken(token: string, ip?: string): Promise<boolean> {
+  // Skip verification if using test key
+  if (TURNSTILE_SECRET_KEY.startsWith('1x0000')) {
+    return true
+  }
+
+  const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      secret: TURNSTILE_SECRET_KEY,
+      response: token,
+      ...(ip && { remoteip: ip }),
+    }),
+  })
+
+  const data = await response.json() as { success: boolean }
+  return data.success
+}
+
 const earlyAccessSchema = z.object({
   email: z.string().email(),
   company: z.string().min(2),
@@ -11,6 +33,7 @@ const earlyAccessSchema = z.object({
     .optional(),
   dataVolume: z.enum(['<10GB', '10-100GB', '100GB-1TB', '>1TB']).optional(),
   message: z.string().optional(),
+  turnstileToken: z.string().min(1, 'Captcha verification required'),
 })
 
 type EarlyAccessBody = z.infer<typeof earlyAccessSchema>
@@ -22,7 +45,7 @@ export async function earlyAccessRoutes(fastify: FastifyInstance) {
       schema: {
         body: {
           type: 'object',
-          required: ['email', 'company'],
+          required: ['email', 'company', 'turnstileToken'],
           properties: {
             email: { type: 'string', format: 'email' },
             company: { type: 'string', minLength: 2 },
@@ -35,6 +58,7 @@ export async function earlyAccessRoutes(fastify: FastifyInstance) {
               enum: ['<10GB', '10-100GB', '100GB-1TB', '>1TB'],
             },
             message: { type: 'string' },
+            turnstileToken: { type: 'string' },
           },
         },
       },
@@ -43,6 +67,15 @@ export async function earlyAccessRoutes(fastify: FastifyInstance) {
       try {
         // Validate with Zod
         const data = earlyAccessSchema.parse(request.body)
+
+        // Verify Turnstile token
+        const isValidCaptcha = await verifyTurnstileToken(data.turnstileToken, request.ip)
+        if (!isValidCaptcha) {
+          return reply.status(400).send({
+            success: false,
+            message: 'Captcha verification failed',
+          })
+        }
 
         // Save to database
         const earlyAccessRequest = await prisma.earlyAccessRequest.create({

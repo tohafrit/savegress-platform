@@ -21,10 +21,14 @@ services:
     build:
       context: ../frontend
       dockerfile: ../docker/frontend.Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=https://savegress.com
+        - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
     container_name: savegress-frontend
     restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=https://savegress.com
+      - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${TURNSTILE_SITE_KEY}
     networks:
       - savegress-network
     depends_on:
@@ -44,6 +48,9 @@ services:
       - REDIS_URL=redis://redis:6379
       - CORS_ORIGIN=https://savegress.com
       - LOG_LEVEL=info
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
     networks:
       - savegress-network
     depends_on:
