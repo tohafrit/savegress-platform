@@ -1,0 +1,102 @@
+# Local development docker-compose
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: savegress-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - savegress-network
+    depends_on:
+      - frontend
+      - backend
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: savegress-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost
+    networks:
+      - savegress-network
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: savegress-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://savegress:localdev123@postgres:5432/savegress
+      - REDIS_URL=redis://:localdev123@redis:6379
+      - CORS_ORIGIN=http://localhost
+      - LOG_LEVEL=info
+    networks:
+      - savegress-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: sh -c "npx prisma db push --skip-generate && npm start"
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: savegress-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=savegress
+      - POSTGRES_USER=savegress
+      - POSTGRES_PASSWORD=localdev123
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - savegress-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U savegress -d savegress"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: savegress-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass localdev123
+    volumes:
+      - redis_data:/data
+    networks:
+      - savegress-network
+    ports:
+      - "6379:6379"
+
+volumes:
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  savegress-network:
+    driver: bridge

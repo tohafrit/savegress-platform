@@ -1,0 +1,56 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Build outputs
+frontend/.next/
+frontend/out/
+backend/dist/
+backend/build/
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+*.pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Docker
+docker/docker-compose.override.yml
+docker/*.override.yml
+
+# Caddy volumes (if mounted locally)
+docker/caddy_data/
+docker/caddy_config/
+
+# Prisma
+backend/prisma/migrations/**/migration.sql
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.cache/
+*.tsbuildinfo
+.turbo/
+
+# Claude
+.claude

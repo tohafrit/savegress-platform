@@ -1,0 +1,23 @@
+# Local development - HTTP only
+:80 {
+    # Frontend (default)
+    reverse_proxy frontend:3000
+
+    # API routes
+    handle /api/* {
+        reverse_proxy backend:3001
+    }
+
+    handle /health {
+        reverse_proxy backend:3001
+    }
+
+    # Compression
+    encode gzip
+
+    # Logging to stdout for development
+    log {
+        output stdout
+        format console
+    }
+}
