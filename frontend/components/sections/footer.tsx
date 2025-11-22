@@ -4,15 +4,12 @@ export function Footer() {
   return (
     <footer className="bg-primary text-white py-12">
       <div className="container-custom">
-        <div className="grid md:grid-cols-4 gap-8 mb-8">
+        <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Product */}
           <div>
             <h4 className="font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Documentation</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">GitHub</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Status Page</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Changelog</a></li>
+              <li><a href="/docs" className="hover:text-accent-orange transition-colors">Documentation</a></li>
             </ul>
           </div>
 
@@ -20,9 +17,7 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-accent-orange transition-colors">About</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Contact</a></li>
+              <li><a href="/about" className="hover:text-accent-orange transition-colors">About</a></li>
             </ul>
           </div>
 
@@ -30,18 +25,8 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Terms of Service</a></li>
-            </ul>
-          </div>
-
-          {/* Connect */}
-          <div>
-            <h4 className="font-semibold mb-4">Connect</h4>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#" className="hover:text-accent-orange transition-colors">LinkedIn</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">Twitter/X</a></li>
-              <li><a href="#" className="hover:text-accent-orange transition-colors">GitHub</a></li>
+              <li><a href="/privacy" className="hover:text-accent-orange transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" className="hover:text-accent-orange transition-colors">Terms of Service</a></li>
             </ul>
           </div>
         </div>
