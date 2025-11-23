@@ -3,13 +3,14 @@
     # Frontend (default)
     reverse_proxy frontend:3000
 
-    # API routes
+    # API routes (Go backend on port 8080)
     handle /api/* {
-        reverse_proxy backend:3001
+        reverse_proxy backend:8080
     }
 
-    handle /health {
-        reverse_proxy backend:3001
+    # Health check
+    handle /health/* {
+        reverse_proxy backend:8080
     }
 
     # Compression

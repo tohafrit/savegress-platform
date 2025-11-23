@@ -1,45 +1,59 @@
-FROM node:20-alpine AS base
+# Build stage
+FROM golang:1.22-alpine AS builder
 
-# Install dependencies only when needed
-FROM base AS deps
-RUN apk add --no-cache libc6-compat openssl
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-COPY prisma ./prisma/
-RUN npm ci
+# Copy go mod files first for better caching
+COPY backend/go.mod backend/go.sum* ./backend/
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Download dependencies
+RUN cd backend && go mod download
 
-# Rebuild the source code only when needed
-FROM base AS builder
+# Copy source code
+COPY backend ./backend
+
+# Build arguments
+ARG VERSION=dev
+ARG BUILD_TIME
+
+# Build the application
+RUN cd backend && CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags "-s -w -X 'github.com/savegress/platform/backend/internal/handlers.Version=${VERSION}'" \
+    -o /app/savegress-api ./cmd/api
+
+# Runtime stage
+FROM alpine:3.19
+
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata
+
+# Create non-root user
+RUN addgroup -g 1000 -S savegress && \
+    adduser -u 1000 -S savegress -G savegress
+
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
 
-RUN npm run build
+# Copy binary from builder
+COPY --from=builder /app/savegress-api /app/savegress-api
 
-# Production image
-FROM base AS runner
-WORKDIR /app
+# Copy migrations
+COPY --from=builder /app/backend/migrations /app/migrations
 
-ENV NODE_ENV production
+# Set ownership
+RUN chown -R savegress:savegress /app
 
-# Install openssl for Prisma
-RUN apk add --no-cache openssl
+# Switch to non-root user
+USER savegress
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nodejs
+# Expose port
+EXPOSE 8080
 
-# Copy with proper ownership
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nodejs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health/live || exit 1
 
-USER nodejs
-
-EXPOSE 3001
-
-CMD ["npm", "start"]
+# Run the application
+ENTRYPOINT ["/app/savegress-api"]

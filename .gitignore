@@ -55,3 +55,6 @@ coverage/
 
 # Claude
 .claude
+
+# Bin
+/bin

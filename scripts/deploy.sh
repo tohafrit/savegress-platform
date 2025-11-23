@@ -19,6 +19,7 @@ rsync -avz --progress \
   --exclude 'site.md' \
   --exclude '.env' \
   --exclude '.claude' \
+  --exclude 'backend/bin' \
   "$(dirname "$0")/../" \
   "${SERVER_USER}@${SERVER_IP}:${SERVER_PATH}/"
 
@@ -42,7 +43,7 @@ ssh "${SERVER_USER}@${SERVER_IP}" "cd ${SERVER_PATH}/docker && docker compose ps
 
 echo ""
 echo "=== Deployment complete ==="
-echo "Site: http://${SERVER_IP}"
+echo "Site: https://savegress.com"
 echo ""
 echo "Commands:"
 echo "  make server-status  - Check status"

@@ -36,29 +36,38 @@ services:
 
   backend:
     build:
-      context: ../backend
-      dockerfile: ../docker/backend.Dockerfile
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+      args:
+        - VERSION=${VERSION:-dev}
     container_name: savegress-backend
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - HOST=0.0.0.0
-      - DATABASE_URL=postgresql://savegress:${DB_PASSWORD}@postgres:5432/savegress
-      - REDIS_URL=redis://redis:6379
-      - CORS_ORIGIN=https://savegress.com
-      - LOG_LEVEL=info
-      - RESEND_API_KEY=${RESEND_API_KEY}
+      - PORT=8080
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://savegress:${DB_PASSWORD}@postgres:5432/savegress?sslmode=disable
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - ALLOWED_ORIGINS=https://savegress.com,https://www.savegress.com
+      - JWT_SECRET=${JWT_SECRET}
+      - LICENSE_PRIVATE_KEY=${LICENSE_PRIVATE_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - RESEND_API_KEY=${RESEND_API_KEY}
     networks:
       - savegress-network
     depends_on:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
-    command: sh -c "npx prisma migrate deploy && npm start"
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   postgres:
     image: postgres:16-alpine
@@ -71,6 +80,7 @@ services:
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ../backend/migrations:/docker-entrypoint-initdb.d:ro
     networks:
       - savegress-network
     healthcheck:
@@ -91,7 +101,7 @@ services:
     networks:
       - savegress-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
