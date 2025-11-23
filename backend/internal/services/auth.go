@@ -46,10 +46,15 @@ type TokenPair struct {
 
 // Claims holds JWT claims
 type Claims struct {
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
-	Role   string    `json:"role"`
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
 	jwt.RegisteredClaims
+}
+
+// GetUserUUID returns UserID as uuid.UUID
+func (c *Claims) GetUserUUID() (uuid.UUID, error) {
+	return uuid.Parse(c.UserID)
 }
 
 // Register creates a new user account
@@ -188,7 +193,7 @@ func (s *AuthService) ValidateToken(tokenString string) (*Claims, error) {
 func (s *AuthService) GetUserByID(ctx context.Context, userID uuid.UUID) (*models.User, error) {
 	var user models.User
 	err := s.db.Pool().QueryRow(ctx, `
-		SELECT id, email, name, company, role, email_verified, stripe_customer_id, created_at, updated_at, last_login_at
+		SELECT id, email, name, COALESCE(company, ''), role, email_verified, COALESCE(stripe_customer_id, ''), created_at, updated_at, last_login_at
 		FROM users WHERE id = $1
 	`, userID).Scan(&user.ID, &user.Email, &user.Name, &user.Company, &user.Role, &user.EmailVerified, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
 	if err != nil {
@@ -201,7 +206,7 @@ func (s *AuthService) generateTokenPair(user *models.User) (*TokenPair, error) {
 	// Access token (15 minutes)
 	accessExpiry := time.Now().Add(15 * time.Minute)
 	accessClaims := &Claims{
-		UserID: user.ID,
+		UserID: user.ID.String(),
 		Email:  user.Email,
 		Role:   user.Role,
 		RegisteredClaims: jwt.RegisteredClaims{

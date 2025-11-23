@@ -46,6 +46,7 @@ func main() {
 	authService := services.NewAuthService(db, redis, cfg.JWTSecret)
 	licenseService := services.NewLicenseService(db, cfg.LicensePrivateKey)
 	billingService := services.NewBillingService(cfg.StripeSecretKey, cfg.StripeWebhookSecret)
+	billingService.SetDB(db)
 	userService := services.NewUserService(db)
 	telemetryService := services.NewTelemetryService(db, redis)
 	earlyAccessService := services.NewEarlyAccessService(db, cfg.AdminEmail, cfg.ResendAPIKey)

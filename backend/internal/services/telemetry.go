@@ -208,7 +208,7 @@ func (s *TelemetryService) GetActiveInstances(ctx context.Context, userID uuid.U
 	}
 	defer rows.Close()
 
-	var instances []Instance
+	instances := make([]Instance, 0)
 	now := time.Now()
 	for rows.Next() {
 		var inst Instance

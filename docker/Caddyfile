@@ -58,3 +58,43 @@ savegress.com {
 www.savegress.com {
     redir https://savegress.com{uri} permanent
 }
+
+# License Server API (for CDC engines)
+license.savegress.com {
+    # License validation endpoints
+    reverse_proxy backend:8080
+
+    # Only allow specific paths
+    @license_api {
+        path /api/v1/license/*
+        path /api/v1/telemetry
+    }
+    handle @license_api {
+        reverse_proxy backend:8080
+    }
+
+    # Block everything else
+    handle {
+        respond "Not Found" 404
+    }
+
+    # Logging
+    log {
+        output file /data/license-access.log {
+            roll_size 100mb
+            roll_keep 5
+            roll_keep_for 720h
+        }
+        format json
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    # Compression
+    encode gzip
+}

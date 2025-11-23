@@ -43,7 +43,12 @@ func Auth(authService *services.AuthService) func(http.Handler) http.Handler {
 			}
 
 			// Get user from database
-			user, err := authService.GetUserByID(r.Context(), claims.UserID)
+			userUUID, err := claims.GetUserUUID()
+			if err != nil {
+				http.Error(w, `{"error": "invalid user id in token"}`, http.StatusUnauthorized)
+				return
+			}
+			user, err := authService.GetUserByID(r.Context(), userUUID)
 			if err != nil {
 				http.Error(w, `{"error": "user not found"}`, http.StatusUnauthorized)
 				return

@@ -36,7 +36,13 @@ func (h *BillingHandler) GetSubscription(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	sub, err := h.billingService.GetSubscription(r.Context(), claims.UserID)
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	sub, err := h.billingService.GetSubscription(r.Context(), userID)
 	if err == services.ErrNoSubscription {
 		respondSuccess(w, map[string]interface{}{"subscription": nil})
 		return
@@ -57,6 +63,12 @@ func (h *BillingHandler) CreateSubscription(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
 	var req struct {
 		Plan       string `json:"plan"` // pro, enterprise
 		SuccessURL string `json:"success_url"`
@@ -67,7 +79,7 @@ func (h *BillingHandler) CreateSubscription(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	user, err := h.userService.GetByID(r.Context(), claims.UserID)
+	user, err := h.userService.GetByID(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "user not found")
 		return
@@ -107,7 +119,13 @@ func (h *BillingHandler) CancelSubscription(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.billingService.CancelSubscription(r.Context(), claims.UserID); err != nil {
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	if err := h.billingService.CancelSubscription(r.Context(), userID); err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to cancel subscription")
 		return
 	}
@@ -123,7 +141,13 @@ func (h *BillingHandler) ListInvoices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invoices, err := h.billingService.ListInvoices(r.Context(), claims.UserID, 20)
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	invoices, err := h.billingService.ListInvoices(r.Context(), userID, 20)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to get invoices")
 		return
@@ -140,7 +164,13 @@ func (h *BillingHandler) ListPaymentMethods(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	user, err := h.userService.GetByID(r.Context(), claims.UserID)
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	user, err := h.userService.GetByID(r.Context(), userID)
 	if err != nil || user.StripeCustomerID == "" {
 		respondSuccess(w, map[string]interface{}{"payment_methods": []interface{}{}})
 		return
@@ -176,6 +206,12 @@ func (h *BillingHandler) CreatePortalSession(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
 	var req struct {
 		ReturnURL string `json:"return_url"`
 	}
@@ -184,7 +220,7 @@ func (h *BillingHandler) CreatePortalSession(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	user, err := h.userService.GetByID(r.Context(), claims.UserID)
+	user, err := h.userService.GetByID(r.Context(), userID)
 	if err != nil || user.StripeCustomerID == "" {
 		respondError(w, http.StatusBadRequest, "no billing account found")
 		return

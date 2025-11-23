@@ -26,7 +26,7 @@ func NewUserService(db *repository.PostgresDB) *UserService {
 func (s *UserService) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
 	var user models.User
 	err := s.db.Pool().QueryRow(ctx, `
-		SELECT id, email, name, company, role, email_verified, stripe_customer_id, created_at, updated_at, last_login_at
+		SELECT id, email, name, COALESCE(company, ''), role, email_verified, COALESCE(stripe_customer_id, ''), created_at, updated_at, last_login_at
 		FROM users WHERE id = $1
 	`, id).Scan(&user.ID, &user.Email, &user.Name, &user.Company, &user.Role,
 		&user.EmailVerified, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
@@ -96,7 +96,7 @@ func (s *UserService) ListUsers(ctx context.Context, limit, offset int) ([]model
 	}
 	defer rows.Close()
 
-	var users []models.User
+	users := make([]models.User, 0)
 	for rows.Next() {
 		var u models.User
 		if err := rows.Scan(&u.ID, &u.Email, &u.Name, &u.Company, &u.Role,

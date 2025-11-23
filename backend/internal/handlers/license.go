@@ -136,7 +136,13 @@ func (h *LicenseHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	licenses, err := h.licenseService.GetUserLicenses(r.Context(), claims.UserID)
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	licenses, err := h.licenseService.GetUserLicenses(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to get licenses")
 		return
@@ -153,6 +159,12 @@ func (h *LicenseHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
 	licenseID := chi.URLParam(r, "id")
 	license, err := h.licenseService.ValidateLicense(r.Context(), licenseID, "")
 	if err != nil {
@@ -161,7 +173,7 @@ func (h *LicenseHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify ownership
-	if license.UserID != claims.UserID && claims.Role != "admin" {
+	if license.UserID != userID && claims.Role != "admin" {
 		respondError(w, http.StatusForbidden, "access denied")
 		return
 	}
@@ -174,6 +186,12 @@ func (h *LicenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetUserFromContext(r.Context())
 	if claims == nil {
 		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
 		return
 	}
 
@@ -191,7 +209,7 @@ func (h *LicenseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		req.ValidDays = 365
 	}
 
-	license, err := h.licenseService.CreateLicense(r.Context(), claims.UserID, req.Tier, req.ValidDays, req.HardwareID)
+	license, err := h.licenseService.CreateLicense(r.Context(), userID, req.Tier, req.ValidDays, req.HardwareID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to create license: "+err.Error())
 		return
@@ -208,6 +226,12 @@ func (h *LicenseHandler) Revoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
 	licenseID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid license ID")
@@ -220,7 +244,7 @@ func (h *LicenseHandler) Revoke(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, "license not found")
 		return
 	}
-	if license.UserID != claims.UserID && claims.Role != "admin" {
+	if license.UserID != userID && claims.Role != "admin" {
 		respondError(w, http.StatusForbidden, "access denied")
 		return
 	}

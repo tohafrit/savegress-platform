@@ -54,7 +54,13 @@ func (h *TelemetryHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stats, err := h.telemetryService.GetDashboardStats(r.Context(), claims.UserID)
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	stats, err := h.telemetryService.GetDashboardStats(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to get stats")
 		return
@@ -71,12 +77,18 @@ func (h *TelemetryHandler) GetUsage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
 	days, _ := strconv.Atoi(r.URL.Query().Get("days"))
 	if days == 0 {
 		days = 7
 	}
 
-	usage, err := h.telemetryService.GetUsageHistory(r.Context(), claims.UserID, days)
+	usage, err := h.telemetryService.GetUsageHistory(r.Context(), userID, days)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to get usage")
 		return
@@ -93,7 +105,13 @@ func (h *TelemetryHandler) GetInstances(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	instances, err := h.telemetryService.GetActiveInstances(r.Context(), claims.UserID)
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	instances, err := h.telemetryService.GetActiveInstances(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to get instances")
 		return

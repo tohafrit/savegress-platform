@@ -170,7 +170,7 @@ func (s *BillingService) ListInvoices(ctx context.Context, userID uuid.UUID, lim
 	}
 	defer rows.Close()
 
-	var invoices []models.Invoice
+	invoices := make([]models.Invoice, 0)
 	for rows.Next() {
 		var inv models.Invoice
 		if err := rows.Scan(&inv.ID, &inv.UserID, &inv.StripeInvoiceID, &inv.Amount,
@@ -190,7 +190,7 @@ func (s *BillingService) ListPaymentMethods(ctx context.Context, stripeCustomerI
 		Type:     stripe.String("card"),
 	}
 
-	var methods []*stripe.PaymentMethod
+	methods := make([]*stripe.PaymentMethod, 0)
 	iter := paymentmethod.List(params)
 	for iter.Next() {
 		methods = append(methods, iter.PaymentMethod())

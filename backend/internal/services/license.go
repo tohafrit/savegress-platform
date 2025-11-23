@@ -224,7 +224,7 @@ func (s *LicenseService) GetUserLicenses(ctx context.Context, userID uuid.UUID) 
 	}
 	defer rows.Close()
 
-	var licenses []models.License
+	licenses := make([]models.License, 0)
 	for rows.Next() {
 		var l models.License
 		err := rows.Scan(&l.ID, &l.UserID, &l.LicenseKey, &l.Tier, &l.Status,
@@ -249,7 +249,7 @@ func (s *LicenseService) GetLicenseActivations(ctx context.Context, licenseID uu
 	}
 	defer rows.Close()
 
-	var activations []models.LicenseActivation
+	activations := make([]models.LicenseActivation, 0)
 	for rows.Next() {
 		var a models.LicenseActivation
 		err := rows.Scan(&a.ID, &a.LicenseID, &a.HardwareID, &a.Hostname, &a.Platform,

@@ -30,7 +30,13 @@ func (h *UserHandler) GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.userService.GetByID(r.Context(), claims.UserID)
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
+	user, err := h.userService.GetByID(r.Context(), userID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "user not found")
 		return
@@ -47,6 +53,12 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
+		return
+	}
+
 	var req struct {
 		Name    string `json:"name"`
 		Company string `json:"company"`
@@ -56,7 +68,7 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.userService.UpdateProfile(r.Context(), claims.UserID, req.Name, req.Company); err != nil {
+	if err := h.userService.UpdateProfile(r.Context(), userID, req.Name, req.Company); err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to update profile")
 		return
 	}
@@ -69,6 +81,12 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetUserFromContext(r.Context())
 	if claims == nil {
 		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	userID, err := claims.GetUserUUID()
+	if err != nil {
+		respondError(w, http.StatusUnauthorized, "invalid user id")
 		return
 	}
 
@@ -86,7 +104,7 @@ func (h *UserHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.userService.ChangePassword(r.Context(), claims.UserID, req.CurrentPassword, req.NewPassword); err != nil {
+	if err := h.userService.ChangePassword(r.Context(), userID, req.CurrentPassword, req.NewPassword); err != nil {
 		if err == services.ErrInvalidCredentials {
 			respondError(w, http.StatusBadRequest, "current password is incorrect")
 			return
