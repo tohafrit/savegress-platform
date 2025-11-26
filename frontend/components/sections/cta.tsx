@@ -39,7 +39,12 @@ export function CTA() {
 
             {/* Schedule call link */}
             <div className="flex justify-center mt-6">
-              <a href="#" className="text-mini-2 text-cyan text-center">
+              <a
+                href={process.env.NEXT_PUBLIC_CALENDLY_URL || "https://cal.com/savegress/30min"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-mini-2 text-cyan text-center hover:underline"
+              >
                 Or schedule a call
               </a>
             </div>
