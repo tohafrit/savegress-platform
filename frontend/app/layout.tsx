@@ -17,6 +17,15 @@ export const metadata: Metadata = {
   description: "Stream database changes between AWS, GCP, and Azure. Compress 10x–150x to cut your data transfer costs.",
   keywords: ["CDC", "Change Data Capture", "Multi-cloud", "Database Replication", "PostgreSQL", "MySQL"],
   authors: [{ name: "Savegress" }],
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Savegress - Replicate data across clouds. Pay less for egress.",
     description: "Stream database changes between AWS, GCP, and Azure. Compress 10x–150x to cut your data transfer costs.",
