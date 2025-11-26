@@ -188,6 +188,103 @@ class ApiClient {
     const params = platform ? `?platform=${platform}` : '';
     return this.request<{ url: string; expires_in: string }>(`/downloads/${product}/${version}${params}`);
   }
+
+  // Connections
+  async getConnections() {
+    return this.request<{ connections: Connection[] }>('/connections');
+  }
+
+  async getConnection(id: string) {
+    return this.request<Connection>(`/connections/${id}`);
+  }
+
+  async createConnection(data: Partial<Connection>) {
+    return this.request<Connection>('/connections', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateConnection(id: string, data: Partial<Connection>) {
+    return this.request<Connection>(`/connections/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteConnection(id: string) {
+    return this.request(`/connections/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async testConnection(id: string) {
+    return this.request<{ success: boolean; message: string }>(`/connections/${id}/test`, {
+      method: 'POST',
+    });
+  }
+
+  async testConnectionDirect(data: Partial<Connection>) {
+    return this.request<{ success: boolean; message: string }>('/connections/test', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Pipelines
+  async getPipelines() {
+    return this.request<{ pipelines: Pipeline[] }>('/pipelines');
+  }
+
+  async getPipeline(id: string) {
+    return this.request<Pipeline>(`/pipelines/${id}`);
+  }
+
+  async createPipeline(data: Partial<Pipeline>) {
+    return this.request<Pipeline>('/pipelines', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePipeline(id: string, data: Partial<Pipeline>) {
+    return this.request<Pipeline>(`/pipelines/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deletePipeline(id: string) {
+    return this.request(`/pipelines/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getPipelineMetrics(id: string, hours: number = 24) {
+    return this.request<{ metrics: PipelineMetric[] }>(`/pipelines/${id}/metrics?hours=${hours}`);
+  }
+
+  async getPipelineLogs(id: string, limit: number = 100, level?: string) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (level) params.append('level', level);
+    return this.request<{ logs: PipelineLog[] }>(`/pipelines/${id}/logs?${params}`);
+  }
+
+  // Config Generator
+  async getConfigFormats() {
+    return this.request<{ formats: ConfigFormat[] }>('/config/formats');
+  }
+
+  async generateConfig(format: string, pipelineId?: string, download?: boolean) {
+    const params = new URLSearchParams({ format });
+    if (pipelineId) params.append('pipeline_id', pipelineId);
+    if (download) params.append('download', 'true');
+    return this.request<string>(`/config/generate?${params}`);
+  }
+
+  async getQuickStart(sourceType: string = 'postgres') {
+    return this.request<string>(`/config/quickstart?source_type=${sourceType}`);
+  }
 }
 
 export const api = new ApiClient();
@@ -274,4 +371,69 @@ export interface Download {
   platforms: string[];
   release_date: string;
   changelog_url?: string;
+}
+
+export interface Connection {
+  id: string;
+  name: string;
+  type: 'postgres' | 'mysql' | 'mongodb' | 'sqlserver' | 'oracle' | 'cassandra' | 'dynamodb';
+  host: string;
+  port: number;
+  database: string;
+  username: string;
+  password?: string;
+  ssl_mode: string;
+  options?: Record<string, string>;
+  last_tested_at?: string;
+  test_status?: 'success' | 'failed' | 'pending';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Pipeline {
+  id: string;
+  name: string;
+  description?: string;
+  source_connection_id: string;
+  target_connection_id?: string;
+  target_type: string;
+  target_config?: Record<string, string>;
+  tables: string[];
+  status: 'created' | 'running' | 'paused' | 'stopped' | 'error';
+  license_id?: string;
+  hardware_id?: string;
+  events_processed: number;
+  bytes_processed: number;
+  current_lag_ms: number;
+  last_event_at?: string;
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
+  source_connection?: Connection;
+  target_connection?: Connection;
+}
+
+export interface PipelineMetric {
+  timestamp: string;
+  events_per_second: number;
+  bytes_per_second: number;
+  latency_ms: number;
+  errors: number;
+}
+
+export interface PipelineLog {
+  id: string;
+  pipeline_id: string;
+  level: 'info' | 'warn' | 'error';
+  message: string;
+  details?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface ConfigFormat {
+  id: string;
+  name: string;
+  description: string;
+  filename: string;
+  icon: string;
 }

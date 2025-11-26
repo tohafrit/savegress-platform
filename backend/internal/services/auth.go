@@ -108,7 +108,7 @@ func (s *AuthService) Register(ctx context.Context, email, password, name, compa
 func (s *AuthService) Login(ctx context.Context, email, password string) (*models.User, *TokenPair, error) {
 	var user models.User
 	err := s.db.Pool().QueryRow(ctx, `
-		SELECT id, email, password_hash, name, company, role, email_verified, created_at, updated_at
+		SELECT id, email, password_hash, name, COALESCE(company, ''), role, email_verified, created_at, updated_at
 		FROM users WHERE email = $1
 	`, email).Scan(&user.ID, &user.Email, &user.PasswordHash, &user.Name, &user.Company, &user.Role, &user.EmailVerified, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
@@ -155,7 +155,7 @@ func (s *AuthService) RefreshToken(ctx context.Context, refreshToken string) (*T
 	// Get user
 	var user models.User
 	err = s.db.Pool().QueryRow(ctx, `
-		SELECT id, email, name, company, role FROM users WHERE id = $1
+		SELECT id, email, name, COALESCE(company, ''), role FROM users WHERE id = $1
 	`, userID).Scan(&user.ID, &user.Email, &user.Name, &user.Company, &user.Role)
 	if err != nil {
 		return nil, ErrUserNotFound

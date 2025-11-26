@@ -46,28 +46,23 @@ export default function DownloadsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Downloads</h1>
-        <p className="text-neutral-dark-gray">Download Savegress CDC engine binaries</p>
+        <h1 className="text-h4 text-white">Downloads</h1>
+        <p className="text-content-1 text-grey">Download Savegress CDC engine binaries</p>
       </div>
 
       {downloads.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-          <Package className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p className="text-neutral-dark-gray">No downloads available</p>
+        <div className="card-dark p-12 text-center">
+          <Package className="w-16 h-16 mx-auto mb-4 text-grey opacity-50" />
+          <p className="text-grey">No downloads available</p>
         </div>
       ) : (
         downloads.map((download) => (
-          <div
-            key={`${download.product}-${download.version}`}
-            className="bg-white rounded-lg shadow-sm border border-gray-200"
-          >
-            <div className="p-4 border-b border-gray-200">
+          <div key={`${download.product}-${download.version}`} className="card-dark">
+            <div className="p-5 border-b border-cyan-40">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-primary">
-                    {download.product}
-                  </h2>
-                  <p className="text-sm text-neutral-dark-gray">
+                  <h2 className="text-h5 text-white">{download.product}</h2>
+                  <p className="text-sm text-grey">
                     Version {download.version}
                     {download.release_date && (
                       <> • Released {new Date(download.release_date).toLocaleDateString()}</>
@@ -80,7 +75,7 @@ export default function DownloadsPage() {
                       href={download.changelog_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                      className="inline-flex items-center gap-1 text-sm text-accent-cyan hover:text-accent-cyan-bright transition-colors"
                     >
                       <FileCode className="w-4 h-4" />
                       Changelog
@@ -90,10 +85,8 @@ export default function DownloadsPage() {
               </div>
             </div>
 
-            <div className="p-4">
-              <h3 className="text-sm font-medium text-neutral-dark-gray mb-3">
-                Choose your platform
-              </h3>
+            <div className="p-5">
+              <h3 className="text-sm font-medium text-grey mb-3">Choose your platform</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {platforms
                   .filter((p) => download.platforms.includes(p.id))
@@ -104,22 +97,16 @@ export default function DownloadsPage() {
                     return (
                       <button
                         key={platform.id}
-                        onClick={() =>
-                          handleDownload(download.product, download.version, platform.id)
-                        }
+                        onClick={() => handleDownload(download.product, download.version, platform.id)}
                         disabled={isDownloading}
-                        className="flex items-center gap-3 p-3 border border-gray-200 rounded-md hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-3 p-3 bg-primary-dark/50 border border-cyan-40/30 rounded-lg hover:border-accent-cyan hover:bg-accent-cyan/5 transition-all disabled:opacity-50"
                       >
                         <span className="text-2xl">{platform.icon}</span>
                         <div className="flex-1 text-left">
-                          <p className="font-medium text-primary">{platform.name}</p>
-                          <p className="text-xs text-neutral-dark-gray">{platform.id}</p>
+                          <p className="font-medium text-white">{platform.name}</p>
+                          <p className="text-xs text-grey">{platform.id}</p>
                         </div>
-                        <DownloadIcon
-                          className={`w-5 h-5 text-neutral-dark-gray ${
-                            isDownloading ? 'animate-bounce' : ''
-                          }`}
-                        />
+                        <DownloadIcon className={`w-5 h-5 text-grey ${isDownloading ? 'animate-bounce' : ''}`} />
                       </button>
                     );
                   })}
@@ -127,20 +114,18 @@ export default function DownloadsPage() {
             </div>
 
             {/* Edition info */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
-              <p className="text-sm text-neutral-dark-gray">
+            <div className="p-4 border-t border-cyan-40/30 bg-primary-dark/30">
+              <p className="text-sm text-grey">
                 Available editions:{' '}
                 {download.editions.map((edition, i) => (
                   <span key={edition}>
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                        edition === 'enterprise'
-                          ? 'bg-purple-100 text-purple-700'
-                          : edition === 'pro'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}
-                    >
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
+                      edition === 'enterprise'
+                        ? 'bg-accent-orange/10 text-accent-orange border-accent-orange/30'
+                        : edition === 'pro'
+                        ? 'bg-accent-cyan/10 text-accent-cyan border-accent-cyan/30'
+                        : 'bg-grey/10 text-grey border-grey/30'
+                    }`}>
                       {edition}
                     </span>
                     {i < download.editions.length - 1 && ' '}
@@ -153,12 +138,12 @@ export default function DownloadsPage() {
       )}
 
       {/* Documentation */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-primary mb-4">Installation</h2>
+      <div className="card-dark p-6">
+        <h2 className="text-h5 text-white mb-4">Installation</h2>
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-neutral-dark-gray mb-2">Linux / macOS</h3>
-            <pre className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm overflow-x-auto">
+            <h3 className="text-sm font-medium text-grey mb-2">Linux / macOS</h3>
+            <pre className="bg-dark-bg border border-cyan-40/30 p-4 rounded-lg text-sm text-grey overflow-x-auto font-mono">
               <code>{`# Download and extract
 curl -L https://releases.savegress.io/cdc-engine/latest/cdc-engine-linux-amd64.tar.gz | tar xz
 
@@ -171,8 +156,8 @@ cdc-engine --version`}</code>
           </div>
 
           <div>
-            <h3 className="text-sm font-medium text-neutral-dark-gray mb-2">Docker</h3>
-            <pre className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm overflow-x-auto">
+            <h3 className="text-sm font-medium text-grey mb-2">Docker</h3>
+            <pre className="bg-dark-bg border border-cyan-40/30 p-4 rounded-lg text-sm text-grey overflow-x-auto font-mono">
               <code>{`docker pull savegress/cdc-engine:latest
 
 docker run -d \\
@@ -183,8 +168,8 @@ docker run -d \\
           </div>
 
           <div>
-            <h3 className="text-sm font-medium text-neutral-dark-gray mb-2">Helm (Kubernetes)</h3>
-            <pre className="bg-gray-900 text-gray-100 p-4 rounded-md text-sm overflow-x-auto">
+            <h3 className="text-sm font-medium text-grey mb-2">Helm (Kubernetes)</h3>
+            <pre className="bg-dark-bg border border-cyan-40/30 p-4 rounded-lg text-sm text-grey overflow-x-auto font-mono">
               <code>{`helm repo add savegress https://charts.savegress.io
 helm install cdc-engine savegress/cdc-engine \\
   --set licenseKey=your-license-key \\
@@ -201,14 +186,14 @@ function DownloadsSkeleton() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
-        <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mt-2" />
+        <div className="h-8 w-32 bg-primary-dark rounded animate-pulse" />
+        <div className="h-4 w-48 bg-primary-dark rounded animate-pulse mt-2" />
       </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-4" />
+      <div className="card-dark p-6">
+        <div className="h-6 w-48 bg-primary-dark rounded animate-pulse mb-4" />
         <div className="grid grid-cols-3 gap-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+            <div key={i} className="h-16 bg-primary-dark/50 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>

@@ -52,6 +52,9 @@ type Config struct {
 	// Admin/Notifications
 	AdminEmail string
 	ResendAPIKey string
+
+	// Encryption
+	EncryptionKey string
 }
 
 // Load loads configuration from environment variables
@@ -82,6 +85,7 @@ func Load() (*Config, error) {
 		TurnstileSecretKey: getEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA"), // Test key
 		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
 		ResendAPIKey:       getEnv("RESEND_API_KEY", ""),
+		EncryptionKey:      getEnv("ENCRYPTION_KEY", "savegress-dev-encryption-key32"), // Must be 32 bytes for AES-256
 	}
 
 	// Validate required fields in production

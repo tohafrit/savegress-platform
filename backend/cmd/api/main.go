@@ -50,6 +50,9 @@ func main() {
 	userService := services.NewUserService(db)
 	telemetryService := services.NewTelemetryService(db, redis)
 	earlyAccessService := services.NewEarlyAccessService(db, cfg.AdminEmail, cfg.ResendAPIKey)
+	connectionService := services.NewConnectionService(db, cfg.EncryptionKey)
+	pipelineService := services.NewPipelineService(db)
+	configService := services.NewConfigGeneratorService(connectionService, pipelineService)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService)
@@ -59,6 +62,9 @@ func main() {
 	telemetryHandler := handlers.NewTelemetryHandler(telemetryService, licenseService)
 	healthHandler := handlers.NewHealthHandler(db, redis)
 	earlyAccessHandler := handlers.NewEarlyAccessHandler(earlyAccessService, cfg.TurnstileSecretKey)
+	connectionHandler := handlers.NewConnectionHandler(connectionService)
+	pipelineHandler := handlers.NewPipelineHandler(pipelineService, licenseService)
+	configHandler := handlers.NewConfigHandler(configService, licenseService)
 
 	// Setup router
 	r := chi.NewRouter()
@@ -159,6 +165,35 @@ func main() {
 			r.Route("/downloads", func(r chi.Router) {
 				r.Get("/", handlers.ListDownloads)
 				r.Get("/{product}/{version}", handlers.GetDownloadURL)
+			})
+
+			// Connections
+			r.Route("/connections", func(r chi.Router) {
+				r.Get("/", connectionHandler.List)
+				r.Post("/", connectionHandler.Create)
+				r.Post("/test", connectionHandler.TestDirect)
+				r.Get("/{id}", connectionHandler.Get)
+				r.Put("/{id}", connectionHandler.Update)
+				r.Delete("/{id}", connectionHandler.Delete)
+				r.Post("/{id}/test", connectionHandler.Test)
+			})
+
+			// Pipelines
+			r.Route("/pipelines", func(r chi.Router) {
+				r.Get("/", pipelineHandler.List)
+				r.Post("/", pipelineHandler.Create)
+				r.Get("/{id}", pipelineHandler.Get)
+				r.Put("/{id}", pipelineHandler.Update)
+				r.Delete("/{id}", pipelineHandler.Delete)
+				r.Get("/{id}/metrics", pipelineHandler.GetMetrics)
+				r.Get("/{id}/logs", pipelineHandler.GetLogs)
+			})
+
+			// Config Generator
+			r.Route("/config", func(r chi.Router) {
+				r.Get("/generate", configHandler.Generate)
+				r.Get("/formats", configHandler.GetFormats)
+				r.Get("/quickstart", configHandler.GetQuickStart)
 			})
 		})
 

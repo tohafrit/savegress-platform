@@ -17,8 +17,8 @@ function PortalContent({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-light-gray">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-dark-bg">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-cyan"></div>
       </div>
     );
   }
@@ -28,7 +28,7 @@ function PortalContent({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-light-gray flex">
+    <div className="min-h-screen bg-dark-bg flex">
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
         <Sidebar />

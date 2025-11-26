@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { api, Subscription, Invoice } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { CreditCard, FileText, ExternalLink, Check } from 'lucide-react';
+import { CreditCard, FileText, ExternalLink, Check, Sparkles } from 'lucide-react';
 
 const plans = [
   {
@@ -23,6 +23,7 @@ const plans = [
     name: 'Enterprise',
     price: '$499',
     period: '/month',
+    popular: true,
     features: [
       'Unlimited instances',
       'Unlimited throughput',
@@ -68,21 +69,21 @@ export default function BillingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-primary">Billing</h1>
-        <p className="text-neutral-dark-gray">Manage your subscription and billing</p>
+        <h1 className="text-h4 text-white">Billing</h1>
+        <p className="text-content-1 text-grey">Manage your subscription and billing</p>
       </div>
 
       {/* Current plan */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-primary mb-4">Current Plan</h2>
+      <div className="card-dark p-6">
+        <h2 className="text-h5 text-white mb-4">Current Plan</h2>
 
         {subscription ? (
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold text-primary capitalize">
+              <p className="text-2xl font-bold text-accent-cyan capitalize">
                 {subscription.plan}
               </p>
-              <p className="text-sm text-neutral-dark-gray">
+              <p className="text-sm text-grey mt-1">
                 {subscription.status === 'active' ? (
                   <>Next billing date: {new Date(subscription.current_period_end).toLocaleDateString()}</>
                 ) : subscription.status === 'trialing' ? (
@@ -92,22 +93,22 @@ export default function BillingPage() {
                 )}
               </p>
               {subscription.cancel_at_period_end && (
-                <p className="text-sm text-yellow-600 mt-1">
+                <p className="text-sm text-accent-orange mt-1">
                   Will be canceled at period end
                 </p>
               )}
             </div>
             <button
               onClick={handleManageBilling}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="btn-secondary px-5 py-2.5 text-sm"
             >
-              <CreditCard className="w-4 h-4" />
+              <CreditCard className="w-4 h-4 mr-2" />
               Manage Billing
             </button>
           </div>
         ) : (
           <div>
-            <p className="text-neutral-dark-gray mb-4">
+            <p className="text-grey mb-4">
               You&apos;re on the free Community plan. Upgrade to unlock more features.
             </p>
           </div>
@@ -120,24 +121,38 @@ export default function BillingPage() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
+              className={`card-dark p-6 relative ${
+                plan.popular ? 'border-accent-cyan' : ''
+              }`}
             >
-              <h3 className="text-xl font-bold text-primary">{plan.name}</h3>
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-accent-cyan text-white text-xs font-medium rounded-full">
+                    <Sparkles className="w-3 h-3" />
+                    Popular
+                  </span>
+                </div>
+              )}
+              <h3 className="text-h5 text-white">{plan.name}</h3>
               <p className="mt-2">
-                <span className="text-3xl font-bold text-primary">{plan.price}</span>
-                <span className="text-neutral-dark-gray">{plan.period}</span>
+                <span className="text-3xl font-bold text-white">{plan.price}</span>
+                <span className="text-grey">{plan.period}</span>
               </p>
               <ul className="mt-4 space-y-2">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-sm text-neutral-dark-gray">
-                    <Check className="w-4 h-4 text-green-600" />
+                  <li key={feature} className="flex items-center gap-2 text-sm text-grey">
+                    <Check className="w-4 h-4 text-accent-cyan" />
                     {feature}
                   </li>
                 ))}
               </ul>
               <button
                 onClick={() => {/* TODO: Implement Stripe checkout */}}
-                className="mt-6 w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-dark"
+                className={`mt-6 w-full py-2.5 px-4 rounded-[20px] text-sm font-medium transition-all ${
+                  plan.popular
+                    ? 'btn-primary'
+                    : 'btn-secondary'
+                }`}
               >
                 Upgrade to {plan.name}
               </button>
@@ -147,36 +162,36 @@ export default function BillingPage() {
       )}
 
       {/* Invoices */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-primary">Invoice History</h2>
+      <div className="card-dark overflow-hidden">
+        <div className="p-5 border-b border-cyan-40">
+          <h2 className="text-h5 text-white">Invoice History</h2>
         </div>
 
         {invoices.length === 0 ? (
-          <div className="p-8 text-center text-neutral-dark-gray">
-            <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-            <p>No invoices yet</p>
+          <div className="p-12 text-center">
+            <FileText className="w-12 h-12 mx-auto mb-3 text-grey opacity-50" />
+            <p className="text-grey">No invoices yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-cyan-40/30">
             {invoices.map((invoice) => (
-              <div key={invoice.id} className="p-4 flex items-center justify-between">
+              <div key={invoice.id} className="p-4 flex items-center justify-between hover:bg-primary-dark/30 transition-colors">
                 <div>
-                  <p className="font-medium text-primary">
+                  <p className="font-medium text-white">
                     {new Date(invoice.created_at).toLocaleDateString()}
                   </p>
-                  <p className="text-sm text-neutral-dark-gray">
+                  <p className="text-sm text-grey">
                     {formatCurrency(invoice.amount, invoice.currency)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                       invoice.status === 'paid'
-                        ? 'bg-green-100 text-green-700'
+                        ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/40'
                         : invoice.status === 'open'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-gray-100 text-gray-700'
+                        ? 'bg-accent-orange/20 text-accent-orange border-accent-orange/40'
+                        : 'bg-grey/20 text-grey border-grey/40'
                     }`}
                   >
                     {invoice.status}
@@ -186,7 +201,7 @@ export default function BillingPage() {
                       href={invoice.pdf_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1 text-neutral-dark-gray hover:text-primary"
+                      className="p-2 text-grey hover:text-accent-cyan transition-colors"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </a>
@@ -205,12 +220,25 @@ function BillingSkeleton() {
   return (
     <div className="space-y-6">
       <div>
-        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
-        <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mt-2" />
+        <div className="h-8 w-32 bg-primary-dark rounded animate-pulse" />
+        <div className="h-4 w-48 bg-primary-dark rounded animate-pulse mt-2" />
       </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4" />
-        <div className="h-8 w-24 bg-gray-200 rounded animate-pulse" />
+      <div className="card-dark p-6">
+        <div className="h-6 w-32 bg-primary-dark rounded animate-pulse mb-4" />
+        <div className="h-8 w-24 bg-primary-dark rounded animate-pulse" />
+      </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        {[1, 2].map((i) => (
+          <div key={i} className="card-dark p-6">
+            <div className="h-6 w-24 bg-primary-dark rounded animate-pulse mb-2" />
+            <div className="h-8 w-20 bg-primary-dark rounded animate-pulse mb-4" />
+            <div className="space-y-2">
+              {[1, 2, 3, 4].map((j) => (
+                <div key={j} className="h-4 w-full bg-primary-dark/50 rounded animate-pulse" />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

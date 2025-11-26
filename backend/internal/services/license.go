@@ -52,7 +52,7 @@ func NewLicenseService(db *repository.PostgresDB, privateKeyBase64 string) *Lice
 func (s *LicenseService) CreateLicense(ctx context.Context, userID uuid.UUID, tier string, validDays int, hardwareID string) (*models.License, error) {
 	// Get user
 	var userName, company string
-	err := s.db.Pool().QueryRow(ctx, "SELECT name, company FROM users WHERE id = $1", userID).Scan(&userName, &company)
+	err := s.db.Pool().QueryRow(ctx, "SELECT name, COALESCE(company, '') FROM users WHERE id = $1", userID).Scan(&userName, &company)
 	if err != nil {
 		return nil, fmt.Errorf("user not found: %w", err)
 	}

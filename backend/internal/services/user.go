@@ -88,7 +88,7 @@ func (s *UserService) ListUsers(ctx context.Context, limit, offset int) ([]model
 	}
 
 	rows, err := s.db.Pool().Query(ctx, `
-		SELECT id, email, name, company, role, email_verified, created_at, updated_at, last_login_at
+		SELECT id, email, name, COALESCE(company, ''), role, email_verified, created_at, updated_at, last_login_at
 		FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2
 	`, limit, offset)
 	if err != nil {

@@ -40,73 +40,60 @@ export default function LicensesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Licenses</h1>
-          <p className="text-neutral-dark-gray">Manage your CDC engine licenses</p>
+          <h1 className="text-h4 text-white">Licenses</h1>
+          <p className="text-content-1 text-grey">Manage your CDC engine licenses</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+          className="btn-primary px-5 py-3 text-sm"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 mr-2" />
           New License
         </button>
       </div>
 
       {licenses.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
-          <Key className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p className="text-neutral-dark-gray">No licenses yet</p>
-          <p className="text-sm text-neutral-dark-gray mt-1">
-            Create a license to start using Savegress CDC
-          </p>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-          >
-            <Plus className="w-4 h-4" />
-            Create License
-          </button>
-        </div>
+        <EmptyState onCreateClick={() => setShowCreateModal(true)} />
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="card-dark overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-primary-dark/50 border-b border-cyan-40">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-dark-gray uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-grey uppercase tracking-wider">
                   License Key
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-dark-gray uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-grey uppercase tracking-wider">
                   Edition
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-dark-gray uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-grey uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-dark-gray uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-grey uppercase tracking-wider">
                   Instances
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-neutral-dark-gray uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-grey uppercase tracking-wider">
                   Expires
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-neutral-dark-gray uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-grey uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-cyan-40/30">
               {licenses.map((license) => (
-                <tr key={license.id} className="hover:bg-gray-50">
+                <tr key={license.id} className="hover:bg-primary-dark/30 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <code className="text-sm font-mono text-primary bg-gray-100 px-2 py-1 rounded">
+                      <code className="text-sm font-mono text-accent-cyan bg-primary-dark px-2 py-1 rounded">
                         {license.key.slice(0, 12)}...
                       </code>
                       <button
                         onClick={() => copyLicenseKey(license)}
-                        className="p-1 text-neutral-dark-gray hover:text-primary"
+                        className="p-1 text-grey hover:text-accent-cyan transition-colors"
                         title="Copy license key"
                       >
                         {copiedId === license.id ? (
-                          <Check className="w-4 h-4 text-green-600" />
+                          <Check className="w-4 h-4 text-accent-cyan" />
                         ) : (
                           <Copy className="w-4 h-4" />
                         )}
@@ -115,12 +102,12 @@ export default function LicensesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                         license.edition === 'enterprise'
-                          ? 'bg-purple-100 text-purple-700'
+                          ? 'bg-purple-500/20 text-purple-400 border-purple-500/40'
                           : license.edition === 'pro'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-700'
+                          ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/40'
+                          : 'bg-grey/20 text-grey border-grey/40'
                       }`}
                     >
                       {license.edition}
@@ -128,28 +115,28 @@ export default function LicensesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
                         license.status === 'active'
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-accent-cyan/20 text-accent-cyan border-accent-cyan/40'
                           : license.status === 'expired'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-red-100 text-red-700'
+                          ? 'bg-accent-orange/20 text-accent-orange border-accent-orange/40'
+                          : 'bg-red-500/20 text-red-400 border-red-500/40'
                       }`}
                     >
                       {license.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-neutral-dark-gray">
+                  <td className="px-4 py-3 text-sm text-grey">
                     {license.active_instances} / {license.max_instances}
                   </td>
-                  <td className="px-4 py-3 text-sm text-neutral-dark-gray">
+                  <td className="px-4 py-3 text-sm text-grey">
                     {new Date(license.expires_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3 text-right">
                     {license.status === 'active' && (
                       <button
                         onClick={() => revokeLicense(license.id)}
-                        className="p-1 text-red-600 hover:text-red-800"
+                        className="p-2 text-grey hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         title="Revoke license"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -172,6 +159,22 @@ export default function LicensesPage() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
+  return (
+    <div className="card-dark p-12 text-center">
+      <Key className="w-16 h-16 mx-auto mb-4 text-grey opacity-50" />
+      <h3 className="text-h5 text-white mb-2">No licenses yet</h3>
+      <p className="text-grey mb-6 max-w-md mx-auto">
+        Create a license to start using Savegress CDC Engine.
+      </p>
+      <button onClick={onCreateClick} className="btn-primary px-6 py-3">
+        <Plus className="w-4 h-4 mr-2" />
+        Create License
+      </button>
     </div>
   );
 }
@@ -202,46 +205,48 @@ function CreateLicenseModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-bold text-primary mb-4">Create New License</h2>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="card-dark w-full max-w-md mx-4">
+        <div className="p-5 border-b border-cyan-40">
+          <h2 className="text-h5 text-white">Create New License</h2>
+        </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
-            {error}
-          </div>
-        )}
+        <div className="p-5 space-y-4">
+          {error && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
-        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-neutral-dark-gray mb-2">
+            <label className="block text-sm font-medium text-grey mb-2">
               Edition
             </label>
             <select
               value={edition}
               onChange={(e) => setEdition(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="input-field"
             >
               <option value="pro">Pro</option>
               <option value="enterprise">Enterprise</option>
             </select>
           </div>
-        </div>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-neutral-dark-gray hover:bg-gray-100 rounded-md"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={isLoading}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark disabled:opacity-50"
-          >
-            {isLoading ? 'Creating...' : 'Create License'}
-          </button>
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={onClose}
+              className="btn-secondary px-5 py-2.5 text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreate}
+              disabled={isLoading}
+              className="btn-primary px-5 py-2.5 text-sm disabled:opacity-50"
+            >
+              {isLoading ? 'Creating...' : 'Create License'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -251,13 +256,19 @@ function CreateLicenseModal({
 function LicensesSkeleton() {
   return (
     <div className="space-y-6">
-      <div>
-        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
-        <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mt-2" />
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-32 bg-primary-dark rounded animate-pulse" />
+          <div className="h-4 w-48 bg-primary-dark rounded animate-pulse mt-2" />
+        </div>
+        <div className="h-10 w-36 bg-primary-dark rounded-[20px] animate-pulse" />
       </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="card-dark p-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-12 bg-gray-100 rounded animate-pulse mb-2" />
+          <div key={i} className="py-4 border-b border-cyan-40/30 last:border-0">
+            <div className="h-5 w-40 bg-primary-dark rounded animate-pulse mb-2" />
+            <div className="h-4 w-24 bg-primary-dark rounded animate-pulse" />
+          </div>
         ))}
       </div>
     </div>

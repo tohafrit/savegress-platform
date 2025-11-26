@@ -198,6 +198,7 @@ type Manager struct {
 	checkInterval   time.Duration // How often to check online
 	hardwareID      string        // This machine's hardware ID
 	telemetryClient *TelemetryClient
+	offlineMode     bool          // Force offline mode - skip all network calls
 
 	// State
 	lastOnlineCheck time.Time
@@ -212,6 +213,7 @@ type ManagerConfig struct {
 	CheckInterval   time.Duration // How often to validate online
 	EnableTelemetry bool          // Send usage telemetry
 	TelemetryURL    string        // Telemetry endpoint
+	OfflineMode     bool          // Force offline mode - no phone-home or telemetry
 }
 
 // DefaultConfig returns default configuration
@@ -242,6 +244,7 @@ func NewManager(cfg ManagerConfig) (*Manager, error) {
 		licenseServer: cfg.LicenseServer,
 		offlineGrace:  cfg.OfflineGrace,
 		checkInterval: cfg.CheckInterval,
+		offlineMode:   cfg.OfflineMode,
 	}
 
 	// Generate hardware ID
@@ -251,12 +254,17 @@ func NewManager(cfg ManagerConfig) (*Manager, error) {
 		m.hardwareID = "unknown"
 	}
 
-	// Initialize telemetry if enabled
-	if cfg.EnableTelemetry && cfg.TelemetryURL != "" {
+	// Initialize telemetry if enabled (and not in offline mode)
+	if cfg.EnableTelemetry && cfg.TelemetryURL != "" && !cfg.OfflineMode {
 		m.telemetryClient = NewTelemetryClient(cfg.TelemetryURL)
 	}
 
 	return m, nil
+}
+
+// IsOfflineMode returns whether the manager is in forced offline mode
+func (m *Manager) IsOfflineMode() bool {
+	return m.offlineMode
 }
 
 // LoadFromEnv loads license from environment variable
@@ -348,6 +356,11 @@ func (m *Manager) parseAndVerify(key LicenseKey) (*License, error) {
 func (m *Manager) ValidateOnline() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// Skip online validation in offline mode
+	if m.offlineMode {
+		return nil
+	}
 
 	if m.license == nil {
 		return ErrNoLicense
@@ -527,6 +540,11 @@ func (m *Manager) IsValid() bool {
 
 // StartBackgroundValidation starts periodic online validation
 func (m *Manager) StartBackgroundValidation(ctx context.Context) {
+	// In offline mode, skip background validation entirely
+	if m.offlineMode {
+		return
+	}
+
 	go func() {
 		ticker := time.NewTicker(m.checkInterval)
 		defer ticker.Stop()

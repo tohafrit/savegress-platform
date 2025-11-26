@@ -10,7 +10,7 @@ echo "=== Deploying Savegress Platform ==="
 
 # Sync files
 echo ">>> Syncing files to server..."
-rsync -avz --progress \
+rsync -avz --progress --delete \
   --exclude 'node_modules' \
   --exclude '.next' \
   --exclude 'dist' \

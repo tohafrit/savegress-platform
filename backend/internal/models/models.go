@@ -119,3 +119,62 @@ type RefreshToken struct {
 	RevokedAt *time.Time `json:"revoked_at,omitempty" db:"revoked_at"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
+
+// Connection represents a database connection configuration
+type Connection struct {
+	ID           uuid.UUID         `json:"id" db:"id"`
+	UserID       uuid.UUID         `json:"user_id" db:"user_id"`
+	Name         string            `json:"name" db:"name"`
+	Type         string            `json:"type" db:"type"` // postgres, mysql, mongodb, etc.
+	Host         string            `json:"host" db:"host"`
+	Port         int               `json:"port" db:"port"`
+	Database     string            `json:"database" db:"database"`
+	Username     string            `json:"username" db:"username"`
+	Password     string            `json:"-" db:"password"` // encrypted
+	SSLMode      string            `json:"ssl_mode" db:"ssl_mode"`
+	Options      map[string]string `json:"options,omitempty" db:"options"`
+	LastTestedAt *time.Time        `json:"last_tested_at,omitempty" db:"last_tested_at"`
+	TestStatus   string            `json:"test_status,omitempty" db:"test_status"` // success, failed, pending
+	CreatedAt    time.Time         `json:"created_at" db:"created_at"`
+	UpdatedAt    time.Time         `json:"updated_at" db:"updated_at"`
+}
+
+// Pipeline represents a CDC replication pipeline configuration
+type Pipeline struct {
+	ID               uuid.UUID  `json:"id" db:"id"`
+	UserID           uuid.UUID  `json:"user_id" db:"user_id"`
+	Name             string     `json:"name" db:"name"`
+	Description      string     `json:"description,omitempty" db:"description"`
+	SourceConnID     uuid.UUID  `json:"source_connection_id" db:"source_connection_id"`
+	TargetConnID     *uuid.UUID `json:"target_connection_id,omitempty" db:"target_connection_id"`
+	TargetType       string     `json:"target_type" db:"target_type"` // postgres, s3, kafka, http, etc.
+	TargetConfig     map[string]string `json:"target_config,omitempty" db:"target_config"`
+	Tables           []string   `json:"tables" db:"tables"`
+	Status           string     `json:"status" db:"status"` // created, running, paused, stopped, error
+	LicenseID        *uuid.UUID `json:"license_id,omitempty" db:"license_id"`
+	HardwareID       string     `json:"hardware_id,omitempty" db:"hardware_id"`
+
+	// Runtime stats (updated from telemetry)
+	EventsProcessed  int64      `json:"events_processed" db:"events_processed"`
+	BytesProcessed   int64      `json:"bytes_processed" db:"bytes_processed"`
+	CurrentLag       int64      `json:"current_lag_ms" db:"current_lag_ms"`
+	LastEventAt      *time.Time `json:"last_event_at,omitempty" db:"last_event_at"`
+	ErrorMessage     string     `json:"error_message,omitempty" db:"error_message"`
+
+	CreatedAt        time.Time  `json:"created_at" db:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at" db:"updated_at"`
+
+	// Joined data (not stored)
+	SourceConnection *Connection `json:"source_connection,omitempty" db:"-"`
+	TargetConnection *Connection `json:"target_connection,omitempty" db:"-"`
+}
+
+// PipelineLog represents a log entry for a pipeline
+type PipelineLog struct {
+	ID         uuid.UUID `json:"id" db:"id"`
+	PipelineID uuid.UUID `json:"pipeline_id" db:"pipeline_id"`
+	Level      string    `json:"level" db:"level"` // info, warn, error
+	Message    string    `json:"message" db:"message"`
+	Details    map[string]interface{} `json:"details,omitempty" db:"details"`
+	Timestamp  time.Time `json:"timestamp" db:"timestamp"`
+}
