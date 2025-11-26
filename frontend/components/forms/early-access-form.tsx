@@ -198,7 +198,7 @@ export function EarlyAccessForm() {
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="btn-primary w-[312px] h-[68px]"
+          className="btn-primary w-full sm:w-[312px] h-[60px] sm:h-[68px]"
         >
           {isSubmitting ? 'Submitting...' : 'Request Early Access  →'}
         </Button>

@@ -12,17 +12,23 @@ const EGRESS_PRICING = {
   Azure: 0.087,
 }
 
-const COMPRESSION_RATIO = 20
+const COMPRESSION_RATIOS = {
+  "time-series": { ratio: 50, label: "Time-series heavy (timestamps, IDs)" },
+  "mixed": { ratio: 12, label: "Mixed CDC (typical workload)" },
+  "json-heavy": { ratio: 5, label: "JSON/text heavy" },
+}
 
 export function Calculator() {
   const [dailyGB, setDailyGB] = useState(100)
   const [sourceCloud, setSourceCloud] = useState<keyof typeof EGRESS_PRICING>("AWS")
+  const [dataPattern, setDataPattern] = useState<keyof typeof COMPRESSION_RATIOS>("mixed")
 
   const monthlyGB = dailyGB * 30
   const pricePerGB = EGRESS_PRICING[sourceCloud]
+  const compressionRatio = COMPRESSION_RATIOS[dataPattern].ratio
 
   const currentMonthlyCost = monthlyGB * pricePerGB
-  const compressedGB = monthlyGB / COMPRESSION_RATIO
+  const compressedGB = monthlyGB / compressionRatio
   const newMonthlyCost = compressedGB * pricePerGB
   const monthlySavings = currentMonthlyCost - newMonthlyCost
   const yearlySavings = monthlySavings * 12
@@ -34,12 +40,20 @@ export function Calculator() {
   const animatedYearly = useCountUp(yearlySavings, 300)
 
   return (
-    <section className="pt-[140px] pb-section bg-dark-bg-secondary relative overflow-hidden">
-      {/* Background image */}
-      <img
+    <section className="pt-16 md:pt-[140px] pb-section bg-dark-bg-secondary relative overflow-hidden">
+      {/* Background image with pulse effect */}
+      <motion.img
         src="/images/bg-calculator.png"
         alt=""
         className="absolute inset-0 w-full h-full pointer-events-none"
+        animate={{
+          opacity: [0.85, 1, 0.85],
+        }}
+        transition={{
+          duration: 6,
+          ease: "easeInOut",
+          repeat: Infinity,
+        }}
       />
 
       <div className="container-custom relative z-10">
@@ -48,7 +62,7 @@ export function Calculator() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-8 md:mb-12"
         >
           <h2 className="text-h2">Calculate your egress savings</h2>
         </motion.div>
@@ -59,11 +73,11 @@ export function Calculator() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="calculator-card w-[624px] h-[670px] p-[40px_72px]">
+          <div className="calculator-card w-full max-w-[624px] mx-auto md:mx-0 h-auto md:h-[670px] p-6 md:p-[40px_72px]">
             <div className="space-y-6">
               {/* Daily volume slider */}
               <div>
-                <Label className="text-content-1 text-grey mb-3 block w-[478px]">
+                <Label className="text-content-1 text-grey mb-3 block w-full max-w-[478px]">
                   Daily data volume: <span className="text-cyan">{dailyGB} GB</span>
                 </Label>
                 <div className="relative">
@@ -74,7 +88,7 @@ export function Calculator() {
                     step="10"
                     value={dailyGB}
                     onChange={(e) => setDailyGB(Number(e.target.value))}
-                    className="slider-scale w-[480px] appearance-none cursor-pointer
+                    className="slider-scale w-full max-w-[480px] appearance-none cursor-pointer
                       [&::-webkit-slider-thumb]:appearance-none
                       [&::-webkit-slider-thumb]:w-[15px]
                       [&::-webkit-slider-thumb]:h-[15px]
@@ -86,7 +100,7 @@ export function Calculator() {
                       [&::-webkit-slider-thumb]:cursor-pointer"
                   />
                 </div>
-                <div className="flex justify-between mt-2 w-[480px] text-content-1 text-cyan">
+                <div className="flex justify-between mt-2 w-full max-w-[480px] text-content-1 text-cyan">
                   <span>10 GB</span>
                   <span>1 TB</span>
                 </div>
@@ -94,9 +108,9 @@ export function Calculator() {
 
               {/* Source cloud */}
               <div>
-                <Label className="text-content-1 text-grey mb-3 block w-[478px]">Source cloud</Label>
+                <Label className="text-content-1 text-grey mb-3 block w-full max-w-[478px]">Source cloud</Label>
                 <Select value={sourceCloud} onValueChange={(v) => setSourceCloud(v as keyof typeof EGRESS_PRICING)}>
-                  <SelectTrigger className="input-field w-[480px] h-[44px] text-white [&>svg:last-child]:hidden">
+                  <SelectTrigger className="input-field w-full max-w-[480px] h-[44px] text-white [&>svg:last-child]:hidden">
                     <SelectValue />
                     <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
                       <path d="M0.5 0.5L5.5 5.5L10.5 0.5" stroke="#02ACD0" strokeLinecap="round"/>
@@ -108,42 +122,56 @@ export function Calculator() {
                     <SelectItem value="Azure" className="text-white hover:bg-white/5">Azure</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Data pattern */}
+              <div>
+                <Label className="text-content-1 text-grey mb-3 block w-full max-w-[478px]">Data pattern</Label>
+                <Select value={dataPattern} onValueChange={(v) => setDataPattern(v as keyof typeof COMPRESSION_RATIOS)}>
+                  <SelectTrigger className="input-field w-full max-w-[480px] h-[44px] text-white [&>svg:last-child]:hidden">
+                    <SelectValue />
+                    <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
+                      <path d="M0.5 0.5L5.5 5.5L10.5 0.5" stroke="#02ACD0" strokeLinecap="round"/>
+                    </svg>
+                  </SelectTrigger>
+                  <SelectContent className="bg-dark-bg-card border-white/10">
+                    <SelectItem value="time-series" className="text-white hover:bg-white/5">Time-series heavy (50x)</SelectItem>
+                    <SelectItem value="mixed" className="text-white hover:bg-white/5">Mixed CDC typical (12x)</SelectItem>
+                    <SelectItem value="json-heavy" className="text-white hover:bg-white/5">JSON/text heavy (5x)</SelectItem>
+                  </SelectContent>
+                </Select>
 
                 {/* Divider */}
-                <svg width="480" height="1" viewBox="0 0 480 1" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-14 mb-8">
-                  <path d="M0.25 0.25H479.75" stroke="#02ACD0" strokeWidth="0.5" strokeLinecap="round" strokeDasharray="4 4"/>
-                </svg>
+                <div className="w-full max-w-[480px] h-[1px] mt-10 md:mt-14 mb-6 md:mb-8 border-t border-dashed border-[#02ACD0]/50" />
               </div>
 
               {/* Results */}
               <div>
-                <div className="flex justify-between items-start">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-0">
                   <div className="text-content-2 text-grey">
                     <div>Current monthly egress cost:</div>
-                    <div>With Savegress (at {COMPRESSION_RATIO}x):</div>
+                    <div>With Savegress (at {compressionRatio}x):</div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <div className="text-h4 text-grey">${animatedCurrentCost.toFixed(2)}</div>
                     <div className="text-h5 text-cyan">${animatedNewCost.toFixed(2)}</div>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <svg width="480" height="1" viewBox="0 0 480 1" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-8 mb-8">
-                  <path d="M0.25 0.25H479.75" stroke="#02ACD0" strokeWidth="0.5" strokeLinecap="round" strokeDasharray="4 4"/>
-                </svg>
+                <div className="w-full max-w-[480px] h-[1px] mt-6 md:mt-8 mb-6 md:mb-8 border-t border-dashed border-[#02ACD0]/50" />
 
                 <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-h5 w-[103px] h-[28px] flex flex-col justify-center">You save:</span>
-                    <div className="text-h4 text-cyan text-right">${animatedSavings.toFixed(2)}/month</div>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2 sm:gap-0">
+                    <span className="text-h5">You save:</span>
+                    <div className="text-h4 text-cyan">${animatedSavings.toFixed(2)}/month</div>
                   </div>
-                  <div className="text-h5 text-right">${animatedYearly.toFixed(0)}/year</div>
+                  <div className="text-h5 sm:text-right">${animatedYearly.toFixed(0)}/year</div>
                 </div>
               </div>
 
-              <p className="text-mini-3 text-grey mt-6 w-[480px]">
-                * Based on {sourceCloud} egress pricing (${pricePerGB}/GB). Compression typically 10-50x for CDC data.
+              <p className="text-mini-3 text-grey mt-6 w-full max-w-[480px]">
+                * Based on {sourceCloud} egress pricing (${pricePerGB}/GB). Compression ranges from 5x (JSON) to 150x (time-series). Typical mixed CDC: 12x.
               </p>
             </div>
           </div>

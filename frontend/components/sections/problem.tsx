@@ -60,6 +60,7 @@ export function Problem() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="w-full md:w-auto"
             >
               <div className="problem-card p-8">
                 {/* Icon */}

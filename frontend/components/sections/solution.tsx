@@ -7,13 +7,13 @@ const solutions = [
   {
     image: "/images/card-costs.png",
     title: "Cut Egress Costs",
-    subtitle: "Up to 200x compression = up to 200x savings",
+    subtitle: "10x–150x compression depending on data patterns",
     details: [
-      "1TB becomes 5-50GB after compression",
+      "1TB becomes 7-100GB after compression",
       "Pay for kilobytes, not gigabytes",
       "ROI visible on your first cloud bill",
     ],
-    highlight: "$2,700/mo → $135/mo (at 20x)",
+    highlight: "$2,700/mo → $225/mo (typical 12x)",
   },
   {
     image: "/images/card-multicloud.png",
@@ -59,6 +59,7 @@ export function Solution() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="w-full md:w-auto"
             >
               <div className="solution-card p-8">
                 {/* Image - fixed height container */}

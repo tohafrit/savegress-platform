@@ -28,14 +28,14 @@ export function Hero() {
       />
 
       {/* Header/Logo */}
-      <header className="relative z-10 pt-[52px] pb-[50px]">
+      <header className="relative z-10 pt-6 pb-6 md:pt-[52px] md:pb-[50px]">
         <div className="container-custom">
           <Image
             src="/images/logo.svg"
             alt="Savegress"
             width={208}
             height={58}
-            className="h-[58px] w-auto"
+            className="h-10 md:h-[58px] w-auto"
           />
         </div>
       </header>
@@ -54,19 +54,19 @@ export function Hero() {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-subtitle-1 text-grey w-[800px] mb-10">
-            Stream database changes between AWS, GCP, and Azure.<br />
-            Compress up to 200x to cut your data transfer costs.
+          <p className="text-subtitle-1 text-grey w-full max-w-[800px] mb-8 md:mb-10">
+            Stream database changes between AWS, GCP, and Azure.<br className="hidden md:inline" />
+            Compress 10x–150x to cut your data transfer costs.
           </p>
 
           {/* Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <button onClick={scrollToForm} className="btn-primary w-[352px]">
+            <button onClick={scrollToForm} className="btn-primary w-full sm:w-[352px]">
               Request Early Access  →
             </button>
             <button
               onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-              className="btn-secondary w-[240px] h-[68px]"
+              className="btn-secondary w-full sm:w-[240px] h-[60px] sm:h-[68px]"
             >
               See How It Works
             </button>
@@ -74,8 +74,8 @@ export function Hero() {
         </motion.div>
       </div>
 
-      {/* Savegress Schema */}
-      <div className="container-custom relative z-10 pb-20">
+      {/* Savegress Schema - hidden on mobile */}
+      <div className="hidden lg:block container-custom relative z-10 pb-20">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,7 +102,7 @@ export function Hero() {
               <div className="relative flex flex-col items-center flex-shrink-0">
                 <div className="schema-center">Savegress</div>
                 <div className="absolute top-full mt-3 w-[176px] text-center text-content-1 text-cyan">
-                  200x smaller
+                  Up to 150x smaller
                 </div>
               </div>
 

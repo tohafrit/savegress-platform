@@ -799,3 +799,201 @@
     }
   }
 }
+
+/* ===========================================
+   RESPONSIVE STYLES - Mobile overrides only
+   Desktop styles above remain unchanged
+   =========================================== */
+
+/* Tablet and below (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .container-custom {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+
+  /* Schema box - simplify for tablet */
+  .schema-box {
+    width: 100%;
+    max-width: 1216px;
+    height: auto;
+    min-height: 200px;
+    padding: 30px 20px;
+  }
+
+  .schema-badge {
+    width: 200px;
+    height: 56px;
+    font-size: 14px;
+  }
+
+  .schema-center {
+    width: 140px;
+    height: 56px;
+    font-size: 14px;
+  }
+
+  /* Cards - allow shrinking */
+  .problem-card {
+    width: 100%;
+    max-width: 384px;
+    height: auto;
+    min-height: 400px;
+  }
+
+  .solution-card {
+    width: 100%;
+    max-width: 384px;
+  }
+
+  .step-card {
+    width: 100%;
+    max-width: 384px;
+    height: auto;
+    min-height: 350px;
+  }
+
+  .specs-card {
+    width: 100%;
+    max-width: 592px;
+    height: auto;
+    min-height: 260px;
+  }
+
+  .usecase-card {
+    width: 100%;
+    max-width: 592px;
+    height: auto;
+    min-height: 300px;
+  }
+
+  /* CTA form */
+  .cta-form-card {
+    width: 100%;
+    max-width: 696px;
+    margin-right: 0;
+    padding: 50px;
+  }
+
+  /* Typography - slightly smaller */
+  .text-h1 {
+    font-size: 48px;
+    line-height: 64px;
+    letter-spacing: 3.8px;
+  }
+
+  .text-h2 {
+    font-size: 32px;
+    line-height: 40px;
+    letter-spacing: 1.2px;
+  }
+}
+
+/* Mobile (max-width: 768px) */
+@media (max-width: 768px) {
+  .container-custom {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* Hide schema box on mobile - too complex */
+  .schema-box {
+    display: none;
+  }
+
+  /* Cards - full width */
+  .problem-card,
+  .solution-card,
+  .step-card {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: auto;
+  }
+
+  .specs-card,
+  .usecase-card {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: auto;
+  }
+
+  /* CTA form */
+  .cta-form-card {
+    padding: 32px 24px;
+  }
+
+  /* Typography - mobile sizes */
+  .text-h1 {
+    font-size: 32px;
+    line-height: 44px;
+    letter-spacing: 2.5px;
+  }
+
+  .text-h2 {
+    font-size: 26px;
+    line-height: 34px;
+    letter-spacing: 1px;
+  }
+
+  .text-h3 {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  .text-h4 {
+    font-size: 18px;
+    line-height: 24px;
+  }
+
+  .text-subtitle-1 {
+    font-size: 18px;
+    line-height: 28px;
+    letter-spacing: 1.4px;
+  }
+
+  /* Buttons */
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Trust badges */
+  .trust-badge {
+    width: 160px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .trust-btn-primary,
+  .trust-btn-secondary {
+    width: 140px;
+    height: 50px;
+  }
+}
+
+/* Small mobile (max-width: 480px) */
+@media (max-width: 480px) {
+  .container-custom {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .text-h1 {
+    font-size: 26px;
+    line-height: 36px;
+    letter-spacing: 2px;
+  }
+
+  .text-h2 {
+    font-size: 22px;
+    line-height: 30px;
+  }
+
+  /* CTA form */
+  .cta-form-card {
+    padding: 24px 16px;
+  }
+}

@@ -19,7 +19,7 @@ const steps = [
     title: "Compress",
     subtitle: "Shrink your data automatically",
     details: [
-      "Up to 200x smaller",
+      "10x–150x smaller depending on data",
       "Optimized for database patterns",
       "Less storage, lower costs",
     ],
@@ -59,6 +59,7 @@ export function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.2 }}
+              className="w-full md:w-auto"
             >
               <div className="step-card p-8 flex flex-col">
                 {/* Background number */}

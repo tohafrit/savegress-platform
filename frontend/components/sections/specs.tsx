@@ -3,14 +3,14 @@
 import { motion } from "framer-motion"
 
 const specs = [
-  { label: "Compression", value: "Up to 200x smaller transfers" },
+  { label: "Compression", value: "10x–150x depending on data" },
   { label: "Throughput", value: "50,000+ events per second" },
   { label: "Latency", value: "Under 15ms end-to-end" },
   { label: "Memory", value: "~200MB footprint" },
   { label: "Built with", value: "Go + Rust" },
 ]
 
-const databases = ["PostgreSQL 12+", "MySQL 5.7+ / 8.0+"]
+const databases = ["PostgreSQL 14+", "MySQL 8.0+", "MongoDB 4.0+", "SQL Server 2016+", "Oracle 12c+", "MariaDB 10.3+"]
 
 const destinations = [
   "Any cloud (AWS, GCP, Azure)",
@@ -54,6 +54,7 @@ export function Specs() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="w-full md:w-auto"
             >
               <div className="specs-card p-8">
                 {/* Background images */}

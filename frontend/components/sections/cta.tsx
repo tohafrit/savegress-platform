@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 
 export function CTA() {
   return (
-    <section id="early-access-form" className="pt-[140px] pb-section bg-dark-bg relative overflow-hidden">
+    <section id="early-access-form" className="pt-16 md:pt-[140px] pb-section bg-dark-bg relative overflow-hidden">
       {/* Background image */}
       <img
         src="/images/bg-form.png"
@@ -19,10 +19,10 @@ export function CTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-8 md:mb-12"
         >
-          <h2 className="text-h2 w-[1216px] mb-4">Ready to cut your egress costs?</h2>
-          <p className="text-content-1 text-grey w-[1216px] h-[28px] text-center">
+          <h2 className="text-h2 w-full max-w-[1216px] mx-auto mb-4">Ready to cut your egress costs?</h2>
+          <p className="text-content-1 text-grey w-full max-w-[1216px] mx-auto text-center">
             Join the early access program. See compression in action on your actual data.
           </p>
         </motion.div>
@@ -32,14 +32,14 @@ export function CTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex justify-end"
+          className="flex justify-center lg:justify-end"
         >
           <div className="cta-form-card">
             <EarlyAccessForm />
 
             {/* Schedule call link */}
             <div className="flex justify-center mt-6">
-              <a href="#" className="text-mini-2 text-cyan text-center w-[137px] h-[22px]">
+              <a href="#" className="text-mini-2 text-cyan text-center">
                 Or schedule a call
               </a>
             </div>
