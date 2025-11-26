@@ -426,6 +426,28 @@
     box-shadow: 0 15px 30px rgba(0, 180, 216, 0.2);
   }
 
+  /* Enterprise feature card */
+  .enterprise-card {
+    width: 100%;
+    border-radius: 25px;
+    border: 0.5px solid rgba(0, 180, 216, 0.4);
+    background: linear-gradient(180deg, rgba(15, 39, 68, 0.8) 0%, rgba(10, 26, 45, 0.9) 100%);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .enterprise-card:hover {
+    transform: translateY(-5px);
+    border-color: #00b4d8;
+    box-shadow: 0 15px 30px rgba(0, 180, 216, 0.2);
+  }
+
+  .enterprise-card:hover svg {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+  }
+
   /* Use case card */
   .usecase-card {
     width: 592px;
@@ -912,7 +934,8 @@
   }
 
   .specs-card,
-  .usecase-card {
+  .usecase-card,
+  .enterprise-card {
     width: 100%;
     max-width: 100%;
     height: auto;

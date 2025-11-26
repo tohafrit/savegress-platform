@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/sections/how-it-works"
 import { Specs } from "@/components/sections/specs"
 import { Calculator } from "@/components/sections/calculator"
 import { UseCases } from "@/components/sections/use-cases"
+import { EnterpriseFeatures } from "@/components/sections/enterprise-features"
 import { Trust } from "@/components/sections/trust"
 import { CTA } from "@/components/sections/cta"
 import { Footer } from "@/components/sections/footer"
@@ -19,6 +20,7 @@ export default function Home() {
       <Specs />
       <Calculator />
       <UseCases />
+      <EnterpriseFeatures />
       <Trust />
       <CTA />
       <Footer />
