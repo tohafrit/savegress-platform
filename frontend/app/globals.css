@@ -2,13 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hero background - outside of Tailwind layers */
+.hero-section {
+  position: relative;
+  background-color: #030E20;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 814px;
+  background-image: url('/images/hero-wave.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Figma exact colors */
+    --dark-bluebackgrsavegress: rgba(3, 14, 33, 1);
+    --abysssavegress: rgba(15, 39, 68, 1);
+    --night-shadowsavegress: rgba(30, 58, 95, 1);
+    --black-shadowsavegress: rgba(31, 41, 55, 1);
+    --blacksavegress: rgba(10, 10, 10, 1);
+    --bluesavegress: rgba(0, 180, 216, 1);
+    --whitesavegress: rgba(255, 255, 255, 1);
+    --greysavegress: rgba(178, 187, 201, 1);
+
+    /* Typography - H1 */
+    --h1-sav-extra-bold-font-family: "Inter", Helvetica;
+    --h1-sav-extra-bold-font-weight: 800;
+    --h1-sav-extra-bold-font-size: 60px;
+    --h1-sav-extra-bold-letter-spacing: 4.8px;
+    --h1-sav-extra-bold-line-height: 80px;
+
+    /* Typography - H2 */
+    --h2-sav-semi-bold-font-family: "Inter", Helvetica;
+    --h2-sav-semi-bold-font-weight: 600;
+    --h2-sav-semi-bold-font-size: 40px;
+    --h2-sav-semi-bold-letter-spacing: 1.6px;
+    --h2-sav-semi-bold-line-height: 46px;
+
+    /* Typography - H3 */
+    --h3-sav-bold-font-family: "Inter", Helvetica;
+    --h3-sav-bold-font-weight: 700;
+    --h3-sav-bold-font-size: 24px;
+    --h3-sav-bold-letter-spacing: 0.96px;
+    --h3-sav-bold-line-height: 32px;
+
+    /* Typography - H4 */
+    --h4-sav-bold-font-family: "Inter", Helvetica;
+    --h4-sav-bold-font-weight: 700;
+    --h4-sav-bold-font-size: 22px;
+    --h4-sav-bold-letter-spacing: 0.88px;
+    --h4-sav-bold-line-height: 28px;
+
+    /* Typography - H5 */
+    --h5-sav-bold-font-family: "Inter", Helvetica;
+    --h5-sav-bold-font-weight: 700;
+    --h5-sav-bold-font-size: 16px;
+    --h5-sav-bold-letter-spacing: 0.64px;
+    --h5-sav-bold-line-height: 22px;
+
+    /* Typography - H6 */
+    --h6-sav-semi-bold-font-family: "Inter", Helvetica;
+    --h6-sav-semi-bold-font-weight: 600;
+    --h6-sav-semi-bold-font-size: 14px;
+    --h6-sav-semi-bold-letter-spacing: 0.56px;
+    --h6-sav-semi-bold-line-height: 22px;
+
+    /* Typography - Button text */
+    --butt-text-sav-bold-font-family: "Inter", Helvetica;
+    --butt-text-sav-bold-font-weight: 700;
+    --butt-text-sav-bold-font-size: 16px;
+    --butt-text-sav-bold-letter-spacing: 0.64px;
+    --butt-text-sav-bold-line-height: 26px;
+
+    /* Typography - Subtitle 1 */
+    --subtitle-1-light-font-family: "Inter", Helvetica;
+    --subtitle-1-light-font-weight: 300;
+    --subtitle-1-light-font-size: 24px;
+    --subtitle-1-light-letter-spacing: 1.92px;
+    --subtitle-1-light-line-height: 38px;
+
+    /* Typography - Subtitle 2 */
+    --subtitle-2-regular-font-family: "Inter", Helvetica;
+    --subtitle-2-regular-font-weight: 400;
+    --subtitle-2-regular-font-size: 24px;
+    --subtitle-2-regular-letter-spacing: 0.96px;
+    --subtitle-2-regular-line-height: 38px;
+
+    /* Typography - Main content 1 */
+    --main-content-1-sav-regular-font-family: "Inter", Helvetica;
+    --main-content-1-sav-regular-font-weight: 400;
+    --main-content-1-sav-regular-font-size: 16px;
+    --main-content-1-sav-regular-letter-spacing: 0.64px;
+    --main-content-1-sav-regular-line-height: 28px;
+
+    /* Typography - Main content 2 */
+    --main-content-2-sav-regular-font-family: "Inter", Helvetica;
+    --main-content-2-sav-regular-font-weight: 400;
+    --main-content-2-sav-regular-font-size: 16px;
+    --main-content-2-sav-regular-letter-spacing: 0.64px;
+    --main-content-2-sav-regular-line-height: 32px;
+
+    /* Typography - Mini content 1 */
+    --mini-content-1-sav-regular-font-family: "Inter", Helvetica;
+    --mini-content-1-sav-regular-font-weight: 400;
+    --mini-content-1-sav-regular-font-size: 14px;
+    --mini-content-1-sav-regular-letter-spacing: 0.56px;
+    --mini-content-1-sav-regular-line-height: 28px;
+
+    /* Typography - Mini content 2 */
+    --mini-content-2-sav-regular-font-family: "Inter", Helvetica;
+    --mini-content-2-sav-regular-font-weight: 400;
+    --mini-content-2-sav-regular-font-size: 12px;
+    --mini-content-2-sav-regular-letter-spacing: 0.48px;
+    --mini-content-2-sav-regular-line-height: 22px;
+
+    /* Typography - Mini content 3 */
+    --mini-content-3-sav-regular-font-family: "Inter", Helvetica;
+    --mini-content-3-sav-regular-font-weight: 400;
+    --mini-content-3-sav-regular-font-size: 11px;
+    --mini-content-3-sav-regular-letter-spacing: 0.22px;
+    --mini-content-3-sav-regular-line-height: 20px;
+
+    /* Tailwind compatibility */
+    --background: 222 47% 7%;
+    --foreground: 0 0% 100%;
+    --border: 222 30% 20%;
+    --input: 222 30% 15%;
+    --ring: 17 100% 57%;
   }
 
   * {
@@ -16,21 +146,656 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-dark-bg text-white;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans;
+    @apply font-sans text-white;
+  }
+}
+
+@layer components {
+  /* Figma card style - exact gradient from style.css */
+  .card-dark {
+    @apply relative rounded-[25px] overflow-hidden;
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.6) 0%, rgba(30, 58, 95, 1) 100%);
+    border: 1px solid #00b4d866;
+  }
+
+  .card-dark:hover {
+    border-color: rgba(0, 180, 216, 0.60);
+  }
+
+  /* Card with gradient border - for Savegress schema box */
+  .card-gradient {
+    @apply relative rounded-[25px] overflow-hidden;
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.6) 0%, rgba(30, 58, 95, 1) 100%);
+    border: 1px solid #00b4d866;
+  }
+
+  /* Cyan bullet dot - Figma ellipse style */
+  .dot-cyan {
+    width: 7px;
+    height: 7px;
+    background-color: #00b4d8;
+    border-radius: 3.5px;
+  }
+
+  /* Icon hover animation */
+  .icon-hover {
+    transition: transform 0.3s ease, filter 0.3s ease;
+  }
+
+  .icon-hover:hover {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 0 10px rgba(0, 180, 216, 0.5));
+  }
+
+  /* Icon circle - Figma style */
+  .icon-circle {
+    width: 63px;
+    height: 63px;
+    border-radius: 31.5px;
+    border: 1px solid #00b4d8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Primary button - exact Figma .butt-3 style */
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--butt-text-sav-bold-font-family);
+    font-weight: var(--butt-text-sav-bold-font-weight);
+    font-size: var(--butt-text-sav-bold-font-size);
+    letter-spacing: var(--butt-text-sav-bold-letter-spacing);
+    line-height: var(--butt-text-sav-bold-line-height);
+    color: #ffffff;
+    text-transform: uppercase;
+    border-radius: 20px;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgba(0, 180, 216, 1) 0%, rgba(30, 58, 95, 1) 100%);
+    padding: 16px 30px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 0 30px rgba(0, 180, 216, 0.5);
+    transform: translateY(-2px);
+  }
+
+  /* Secondary button - exact Figma .see-how-it-works-wrapper style */
+  .btn-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--butt-text-sav-bold-font-family);
+    font-weight: var(--butt-text-sav-bold-font-weight);
+    font-size: var(--butt-text-sav-bold-font-size);
+    letter-spacing: var(--butt-text-sav-bold-letter-spacing);
+    line-height: var(--butt-text-sav-bold-line-height);
+    color: #ffffff;
+    text-transform: uppercase;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #00b4d866;
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.6) 0%, rgba(30, 58, 95, 1) 100%);
+    padding: 16px 30px;
+    transition: all 0.3s ease;
+  }
+
+  .btn-secondary:hover {
+    border-color: rgba(0, 180, 216, 0.70);
+    box-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
+  }
+
+  /* Input/Select field - exact Figma .butt-2 style */
+  .input-field {
+    display: flex;
+    width: 100%;
+    height: 44px;
+    padding: 0 30.935px 0 20px;
+    align-items: center;
+    border-radius: 15px;
+    border: 1px solid rgba(0, 180, 216, 0.40);
+    background: linear-gradient(90deg, rgba(3, 14, 32, 0.80) 0%, #1E3A5F 100%);
+    font-family: var(--main-content-1-sav-regular-font-family);
+    font-weight: var(--main-content-1-sav-regular-font-weight);
+    font-size: var(--main-content-1-sav-regular-font-size);
+    letter-spacing: var(--main-content-1-sav-regular-letter-spacing);
+    line-height: var(--main-content-1-sav-regular-line-height);
+    color: #ffffff;
+  }
+
+  .input-field::placeholder {
+    color: #b2bbc9;
+    opacity: 0.6;
+  }
+
+  /* Schema box - Figma style */
+  .schema-box {
+    width: 1216px;
+    height: 290px;
+    border-radius: 25px;
+    border: 1px solid rgba(0, 180, 216, 0.40);
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.60) 0%, #1E3A5F 100%);
+    padding: 40px 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Schema badge - source/destination - exact Figma style */
+  .schema-badge {
+    display: flex;
+    width: 280px;
+    height: 68px;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #FFF;
+    text-align: center;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 22px;
+    letter-spacing: 0.64px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 180, 216, 0.40);
+    background: linear-gradient(90deg, rgba(3, 14, 32, 0.8) 0%, rgba(30, 58, 95, 1) 100%);
+  }
+
+  /* Schema center button - Savegress */
+  .schema-center {
+    display: flex;
+    width: 176px;
+    height: 68px;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #FFF;
+    text-align: center;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 26px;
+    letter-spacing: 0.64px;
+    text-transform: uppercase;
+    background: #02ACD0;
+    border-radius: 20px;
+    animation: pulse-center 2s ease-in-out infinite;
+    box-shadow: 0 0 30px rgba(2, 172, 208, 0.4);
+  }
+
+  @keyframes pulse-center {
+    0%, 100% {
+      box-shadow: 0 0 30px rgba(2, 172, 208, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 50px rgba(2, 172, 208, 0.7);
+    }
+  }
+
+  /* Animated schema arrows */
+  .schema-arrow {
+    animation: arrow-flow 2s linear infinite;
+  }
+
+  @keyframes arrow-flow {
+    0% {
+      stroke-dashoffset: 20;
+    }
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Calculator card - exact Figma .calculate-2 style */
+  .calculator-card {
+    border-radius: 25px;
+    overflow: hidden;
+    border: 1px solid #00b4d866;
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.6) 0%, rgba(30, 58, 95, 1) 100%);
+  }
+
+  /* Form card - exact Figma .form-2 style */
+  .form-card {
+    border-radius: 25px;
+    overflow: hidden;
+    border: 1px solid #00b4d866;
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.6) 0%, rgba(30, 58, 95, 1) 100%);
+  }
+
+  /* Step card - exact Figma .component style */
+  .step-card {
+    border-radius: 25px;
+    overflow: hidden;
+  }
+
+  /* Problem card - exact Figma style */
+  .problem-card {
+    width: 384px;
+    height: 458px;
+    background: #0F2744;
+    border-radius: 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .problem-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 180, 216, 0.15);
+  }
+
+  /* Solution card */
+  .solution-card {
+    display: flex;
+    width: 384px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    border-radius: 25px;
+    transition: transform 0.3s ease;
+  }
+
+  .solution-card:hover {
+    transform: translateY(-8px);
+  }
+
+  .solution-card:hover img {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+  }
+
+  /* Specs card */
+  .specs-card {
+    width: 592px;
+    height: 294px;
+    border-radius: 25px;
+    border: 0.5px solid #00b4d8;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .specs-card:hover {
+    transform: translateY(-5px);
+    border-color: #00b4d8;
+    box-shadow: 0 15px 30px rgba(0, 180, 216, 0.2);
+  }
+
+  /* Use case card */
+  .usecase-card {
+    width: 592px;
+    height: 344px;
+    border-radius: 25px;
+    background: #0F2744;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .usecase-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 180, 216, 0.15);
+  }
+
+  .usecase-card:hover img {
+    transform: scale(1.1);
+    transition: transform 0.3s ease;
+  }
+
+  /* Trust badge */
+  .trust-badge {
+    display: flex;
+    width: 208px;
+    height: 40px;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #FFF;
+    text-align: center;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 28px;
+    letter-spacing: 0.64px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 180, 216, 0.40);
+  }
+
+  /* Trust button primary (GO) */
+  .trust-btn-primary {
+    display: flex;
+    width: 176px;
+    height: 60px;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #00B4D8 0%, #1E3A5F 112.68%);
+    color: #FFF;
+    font-size: 14px;
+  }
+
+  /* Trust button secondary (RUST) */
+  .trust-btn-secondary {
+    display: flex;
+    width: 176px;
+    height: 60px;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 180, 216, 0.40);
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.60) 0%, #1E3A5F 100%);
+    color: #FFF;
+    font-size: 14px;
+  }
+
+  /* Highlight box */
+  .highlight-box {
+    display: flex;
+    width: 100%;
+    height: 60px;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #FFF;
+    text-align: center;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 28px;
+    letter-spacing: 0.64px;
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.60) 0%, #1E3A5F 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 180, 216, 0.40);
+  }
+
+  /* CTA form card */
+  .cta-form-card {
+    width: 696px;
+    border-radius: 25px;
+    border: 1px solid rgba(0, 180, 216, 0.40);
+    background: linear-gradient(90deg, rgba(10, 10, 10, 0.60) 0%, #1E3A5F 100%);
+    padding: 72px;
+    margin-right: 112px;
+  }
+
+  /* Footer link */
+  .footer-link {
+    width: 114px;
+    height: 28px;
+    flex-shrink: 0;
+    font-family: Inter, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 28px;
+    letter-spacing: 0.56px;
+    color: #B2BBC9;
+    transition: color 0.3s ease;
+  }
+
+  .footer-link:hover {
+    color: #00B4D8;
+  }
+
+  /* Plus sign for lists */
+  .list-plus {
+    color: #00B4D8;
+    font-family: Inter, sans-serif;
+    font-size: 32px;
+    font-weight: 100;
+    line-height: 28px;
+    letter-spacing: 1.28px;
+  }
+
+  /* Step card */
+  .step-card {
+    width: 384px;
+    height: 390px;
+    border-radius: 25px;
+    border: 0.5px solid #00B4D8;
+    background: #0F2744;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .step-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 180, 216, 0.2);
+    border-color: #00B4D8;
+  }
+
+  /* Step number background */
+  .step-number-bg {
+    position: absolute;
+    top: -20px;
+    right: -30px;
+    color: #00B4D8;
+    font-family: Inter, sans-serif;
+    font-size: 300px;
+    font-weight: 400;
+    line-height: 300px;
+    letter-spacing: 12px;
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  /* Slider scale - exact Figma .scale style */
+  .slider-scale {
+    width: 100%;
+    height: 5px;
+    border-radius: 25px;
+    background: linear-gradient(264deg, rgba(0, 180, 216, 0.5) 0%, rgba(30, 58, 95, 0.7) 100%);
+  }
+
+  /* Slider thumb - exact Figma .ellipse-10 style */
+  .slider-thumb {
+    width: 15px;
+    height: 15px;
+    background-color: #030e20;
+    border-radius: 7.5px;
+    border: 1px solid #00b4d8;
+  }
+
+  /* Link button - exact Figma .butt-4, .butt-5, .butt-6 style */
+  .link-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #00b4d866;
+    padding: 8px 20px;
+    font-family: var(--main-content-1-sav-regular-font-family);
+    font-weight: var(--main-content-1-sav-regular-font-weight);
+    font-size: var(--main-content-1-sav-regular-font-size);
+    letter-spacing: var(--main-content-1-sav-regular-letter-spacing);
+    line-height: var(--main-content-1-sav-regular-line-height);
+    color: #ffffff;
+    transition: all 0.3s ease;
+  }
+
+  .link-button:hover {
+    border-color: rgba(0, 180, 216, 0.70);
+    box-shadow: 0 0 15px rgba(0, 180, 216, 0.2);
+  }
+
+  /* Text styles - Figma exact */
+  .text-h1 {
+    font-family: var(--h1-sav-extra-bold-font-family);
+    font-weight: var(--h1-sav-extra-bold-font-weight);
+    font-size: var(--h1-sav-extra-bold-font-size);
+    letter-spacing: var(--h1-sav-extra-bold-letter-spacing);
+    line-height: var(--h1-sav-extra-bold-line-height);
+    color: #ffffff;
+  }
+
+  .text-h2 {
+    font-family: var(--h2-sav-semi-bold-font-family);
+    font-weight: var(--h2-sav-semi-bold-font-weight);
+    font-size: var(--h2-sav-semi-bold-font-size);
+    letter-spacing: var(--h2-sav-semi-bold-letter-spacing);
+    line-height: var(--h2-sav-semi-bold-line-height);
+    color: #ffffff;
+  }
+
+  .text-h3 {
+    font-family: var(--h3-sav-bold-font-family);
+    font-weight: var(--h3-sav-bold-font-weight);
+    font-size: var(--h3-sav-bold-font-size);
+    letter-spacing: var(--h3-sav-bold-letter-spacing);
+    line-height: var(--h3-sav-bold-line-height);
+    color: #ffffff;
+  }
+
+  .text-h4 {
+    font-family: var(--h4-sav-bold-font-family);
+    font-weight: var(--h4-sav-bold-font-weight);
+    font-size: var(--h4-sav-bold-font-size);
+    letter-spacing: var(--h4-sav-bold-letter-spacing);
+    line-height: var(--h4-sav-bold-line-height);
+    color: #ffffff;
+  }
+
+  .text-h5 {
+    font-family: var(--h5-sav-bold-font-family);
+    font-weight: var(--h5-sav-bold-font-weight);
+    font-size: var(--h5-sav-bold-font-size);
+    letter-spacing: var(--h5-sav-bold-letter-spacing);
+    line-height: var(--h5-sav-bold-line-height);
+    color: #ffffff;
+  }
+
+  .text-h6 {
+    font-family: var(--h6-sav-semi-bold-font-family);
+    font-weight: var(--h6-sav-semi-bold-font-weight);
+    font-size: var(--h6-sav-semi-bold-font-size);
+    letter-spacing: var(--h6-sav-semi-bold-letter-spacing);
+    line-height: var(--h6-sav-semi-bold-line-height);
+    color: #ffffff;
+  }
+
+  .text-subtitle-1 {
+    font-family: var(--subtitle-1-light-font-family);
+    font-weight: var(--subtitle-1-light-font-weight);
+    font-size: var(--subtitle-1-light-font-size);
+    letter-spacing: var(--subtitle-1-light-letter-spacing);
+    line-height: var(--subtitle-1-light-line-height);
+  }
+
+  .text-subtitle-2 {
+    font-family: var(--subtitle-2-regular-font-family);
+    font-weight: var(--subtitle-2-regular-font-weight);
+    font-size: var(--subtitle-2-regular-font-size);
+    letter-spacing: var(--subtitle-2-regular-letter-spacing);
+    line-height: var(--subtitle-2-regular-line-height);
+  }
+
+  .text-content-1 {
+    font-family: var(--main-content-1-sav-regular-font-family);
+    font-weight: var(--main-content-1-sav-regular-font-weight);
+    font-size: var(--main-content-1-sav-regular-font-size);
+    letter-spacing: var(--main-content-1-sav-regular-letter-spacing);
+    line-height: var(--main-content-1-sav-regular-line-height);
+  }
+
+  .text-content-2 {
+    font-family: var(--main-content-2-sav-regular-font-family);
+    font-weight: var(--main-content-2-sav-regular-font-weight);
+    font-size: var(--main-content-2-sav-regular-font-size);
+    letter-spacing: var(--main-content-2-sav-regular-letter-spacing);
+    line-height: var(--main-content-2-sav-regular-line-height);
+  }
+
+  .text-mini-1 {
+    font-family: var(--mini-content-1-sav-regular-font-family);
+    font-weight: var(--mini-content-1-sav-regular-font-weight);
+    font-size: var(--mini-content-1-sav-regular-font-size);
+    letter-spacing: var(--mini-content-1-sav-regular-letter-spacing);
+    line-height: var(--mini-content-1-sav-regular-line-height);
+  }
+
+  .text-mini-2 {
+    font-family: var(--mini-content-2-sav-regular-font-family);
+    font-weight: var(--mini-content-2-sav-regular-font-weight);
+    font-size: var(--mini-content-2-sav-regular-font-size);
+    letter-spacing: var(--mini-content-2-sav-regular-letter-spacing);
+    line-height: var(--mini-content-2-sav-regular-line-height);
+  }
+
+  .text-mini-3 {
+    font-family: var(--mini-content-3-sav-regular-font-family);
+    font-weight: var(--mini-content-3-sav-regular-font-weight);
+    font-size: var(--mini-content-3-sav-regular-font-size);
+    letter-spacing: var(--mini-content-3-sav-regular-letter-spacing);
+    line-height: var(--mini-content-3-sav-regular-line-height);
+  }
+
+  /* Color utilities - Figma exact */
+  .text-cyan {
+    color: #00b4d8;
+  }
+
+  .text-grey {
+    color: #b2bbc9;
+  }
+
+  .bg-cyan {
+    background-color: #00b4d8;
+  }
+
+  .border-cyan-40 {
+    border-color: #00b4d866;
   }
 }
 
 @layer utilities {
   .container-custom {
-    @apply max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-[1440px] mx-auto px-[112px];
   }
 
   .section-padding {
     @apply py-section-mobile md:py-section;
+  }
+
+  /* Dark section backgrounds */
+  .section-dark {
+    @apply bg-dark-bg;
+  }
+
+  .section-dark-secondary {
+    @apply bg-dark-bg-secondary;
+  }
+
+  /* Text utilities for dark theme */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-orange to-accent-yellow;
+  }
+
+  /* Animated gradient text for cyan highlights */
+  .text-gradient-cyan {
+    background: linear-gradient(90deg, #00B4D8, #01C8EF, #00D4AA, #01C8EF, #00B4D8);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% center;
+    }
+    50% {
+      background-position: 100% center;
+    }
+    100% {
+      background-position: 0% center;
+    }
   }
 }

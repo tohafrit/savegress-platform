@@ -1,12 +1,10 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { Cloud, Shield, TruckIcon, BarChart } from "lucide-react"
 import { motion } from "framer-motion"
 
 const useCases = [
   {
-    icon: Cloud,
+    icon: "/images/icon-sync.svg",
     title: "Multi-Cloud Data Sync",
     description: "Keep data consistent across clouds",
     details: [
@@ -16,7 +14,7 @@ const useCases = [
     ],
   },
   {
-    icon: Shield,
+    icon: "/images/icon-lock.svg",
     title: "Disaster Recovery",
     description: "Affordable cross-region DR",
     details: [
@@ -26,7 +24,7 @@ const useCases = [
     ],
   },
   {
-    icon: TruckIcon,
+    icon: "/images/icon-migration.svg",
     title: "Data Migration",
     description: "Move to a new cloud without downtime",
     details: [
@@ -36,7 +34,7 @@ const useCases = [
     ],
   },
   {
-    icon: BarChart,
+    icon: "/images/icon-analytics.svg",
     title: "Analytics Pipeline",
     description: "Feed your data warehouse in real-time",
     details: [
@@ -49,21 +47,19 @@ const useCases = [
 
 export function UseCases() {
   return (
-    <section className="section-padding bg-neutral-light-gray">
+    <section className="section-padding bg-dark-bg">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-heading-lg text-primary mb-4">
-            Where teams use Savegress
-          </h2>
+          <h2 className="text-h2">Where teams use Savegress</h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="flex flex-wrap justify-center gap-8">
           {useCases.map((useCase, index) => (
             <motion.div
               key={useCase.title}
@@ -72,23 +68,26 @@ export function UseCases() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <Card className="p-6 h-full hover:shadow-lg transition-shadow">
-                <useCase.icon className="h-10 w-10 text-accent-orange mb-4" />
-                <h3 className="text-heading-sm text-primary mb-2">
-                  {useCase.title}
-                </h3>
-                <p className="text-body-md text-neutral-dark-gray mb-4">
-                  {useCase.description}
-                </p>
-                <ul className="space-y-2">
+              <div className="usecase-card p-8">
+                {/* Icon */}
+                <img
+                  src={useCase.icon}
+                  alt=""
+                  className="absolute top-6 left-6 md:top-8 md:left-8 w-[50px] h-[50px] md:w-[63px] md:h-[63px] icon-hover"
+                />
+
+                <h3 className="text-h4 max-w-full mt-[70px] md:mt-[85px]">{useCase.title}</h3>
+                <p className="text-content-1 text-cyan max-w-full mt-3">{useCase.description}</p>
+
+                <ul className="text-content-1 text-grey max-w-full mt-6">
                   {useCase.details.map((detail) => (
-                    <li key={detail} className="text-sm text-neutral-dark-gray flex items-start">
-                      <span className="text-primary mr-2">*</span>
+                    <li key={detail} className="flex items-center gap-3">
+                      <span className="dot-cyan flex-shrink-0" />
                       {detail}
                     </li>
                   ))}
                 </ul>
-              </Card>
+              </div>
             </motion.div>
           ))}
         </div>

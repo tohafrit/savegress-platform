@@ -1,6 +1,5 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
 import { motion } from "framer-motion"
 
 const specs = [
@@ -26,74 +25,103 @@ const reliability = [
   "No data loss, guaranteed",
 ]
 
+const cards = [
+  { title: "Key Specifications", content: "specs" },
+  { title: "Supported Databases", content: "databases" },
+  { title: "Destinations", content: "destinations" },
+  { title: "Reliability", content: "reliability" },
+]
+
 export function Specs() {
   return (
-    <section className="section-padding bg-neutral-light-gray">
-      <div className="container-custom">
+    <section className="section-padding bg-dark-bg relative">
+      <div className="container-custom relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-heading-lg text-primary mb-4">
-            Built for production
-          </h2>
+          <h2 className="text-h2">Built for production</h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-          {/* Key specs */}
-          <Card className="p-6">
-            <h3 className="text-heading-sm text-primary mb-4">Key Specifications</h3>
-            <div className="space-y-3">
-              {specs.map((spec) => (
-                <div key={spec.label} className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-neutral-dark-gray">{spec.label}</span>
-                  <span className="text-sm font-mono text-primary">{spec.value}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
+        <div className="flex flex-wrap justify-center gap-8">
+          {cards.map((card, index) => (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+            >
+              <div className="specs-card p-8">
+                {/* Background images */}
+                {card.content === 'specs' && (
+                  <img src="/images/spec-1.png" alt="" className="absolute bottom-0 left-1/2 -translate-x-1/2 pointer-events-none" />
+                )}
+                {card.content === 'databases' && (
+                  <img src="/images/spec-2.png" alt="" className="absolute bottom-0 right-0 pointer-events-none" />
+                )}
+                {card.content === 'destinations' && (
+                  <img src="/images/spec-3.png" alt="" className="absolute top-0 right-0 pointer-events-none" />
+                )}
+                {card.content === 'reliability' && (
+                  <img src="/images/spec-4.png" alt="" className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
+                )}
 
-          {/* Supported databases */}
-          <Card className="p-6">
-            <h3 className="text-heading-sm text-primary mb-4">Supported Databases</h3>
-            <ul className="space-y-2">
-              {databases.map((db) => (
-                <li key={db} className="text-sm text-neutral-dark-gray flex items-start">
-                  <span className="text-primary mr-2">+</span>
-                  {db}
-                </li>
-              ))}
-            </ul>
-          </Card>
+                {/* Header */}
+                <h3 className="text-h4 mb-6 relative z-10">{card.title}</h3>
 
-          {/* Destinations */}
-          <Card className="p-6">
-            <h3 className="text-heading-sm text-primary mb-4">Destinations</h3>
-            <ul className="space-y-2">
-              {destinations.map((dest) => (
-                <li key={dest} className="text-sm text-neutral-dark-gray flex items-start">
-                  <span className="text-primary mr-2">-&gt;</span>
-                  {dest}
-                </li>
-              ))}
-            </ul>
-          </Card>
+                {/* Content */}
+                {card.content === 'specs' && (
+                  <div className="flex justify-between relative z-10">
+                    <div className="text-content-2 text-cyan w-[230px]">
+                      {specs.map((spec) => <div key={spec.label}>{spec.label}</div>)}
+                    </div>
+                    <div className="text-content-2 text-grey text-right">
+                      {specs.map((spec) => <div key={spec.value}>{spec.value}</div>)}
+                    </div>
+                  </div>
+                )}
 
-          {/* Reliability */}
-          <Card className="p-6">
-            <h3 className="text-heading-sm text-primary mb-4">Reliability</h3>
-            <ul className="space-y-2">
-              {reliability.map((item) => (
-                <li key={item} className="text-sm text-neutral-dark-gray flex items-start">
-                  <span className="text-primary mr-2">+</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </Card>
+                {card.content === 'databases' && (
+                  <div>
+                    {databases.map((db) => (
+                      <div key={db} className="flex items-center gap-3">
+                        <span className="list-plus">+</span>
+                        <span className="text-content-2 text-grey">{db}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {card.content === 'destinations' && (
+                  <div>
+                    {destinations.map((dest) => (
+                      <div key={dest} className="flex items-center gap-3">
+                        <svg width="8" height="9" viewBox="0 0 8 9" fill="none" xmlns="http://www.w3.org/2000/svg" className="flex-shrink-0">
+                          <path d="M7.5 4.33008L0 -4.95911e-05V8.66021L7.5 4.33008Z" fill="#00B4D8"/>
+                        </svg>
+                        <span className="text-content-2 text-grey">{dest}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {card.content === 'reliability' && (
+                  <div>
+                    {reliability.map((item) => (
+                      <div key={item} className="flex items-center gap-3">
+                        <span className="list-plus">+</span>
+                        <span className="text-content-2 text-grey">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

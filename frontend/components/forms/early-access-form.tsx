@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Card } from "@/components/ui/card"
+import { CheckCircle } from "lucide-react"
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -77,121 +77,132 @@ export function EarlyAccessForm() {
 
   if (isSuccess) {
     return (
-      <Card className="p-8 text-center">
-        <div className="text-4xl mb-4">+</div>
-        <h3 className="text-heading-sm text-primary mb-2">Thank you!</h3>
-        <p className="text-body-md text-neutral-dark-gray">
+      <div className="text-center py-8">
+        <CheckCircle className="w-16 h-16 text-accent-cyan mx-auto mb-4" />
+        <h3 className="text-h4 mb-2">Thank you!</h3>
+        <p className="text-content-1 text-grey">
           We&apos;ll contact you soon with early access details.
         </p>
-      </Card>
+      </div>
     )
   }
 
   return (
-    <Card className="p-8">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-6">
         {/* Email */}
         <div>
-          <Label htmlFor="email">Work email *</Label>
+          <Label htmlFor="email" className="text-content-1 text-white w-full h-[24px]">
+            Work email <span className="text-cyan">*</span>
+          </Label>
           <Input
             id="email"
             type="email"
             placeholder="you@company.com"
             {...register("email")}
-            className="mt-1"
+            className="input-field mt-2 text-white placeholder:text-text-muted h-[44px]"
           />
           {errors.email && (
-            <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+            <p className="text-sm text-accent-orange mt-1">{errors.email.message}</p>
           )}
         </div>
 
         {/* Company */}
         <div>
-          <Label htmlFor="company">Company name *</Label>
+          <Label htmlFor="company" className="text-content-1 text-white w-full h-[24px]">
+            Company name <span className="text-cyan">*</span>
+          </Label>
           <Input
             id="company"
             type="text"
             placeholder="Acme Inc."
             {...register("company")}
-            className="mt-1"
+            className="input-field mt-2 text-white placeholder:text-text-muted h-[44px]"
           />
           {errors.company && (
-            <p className="text-sm text-red-500 mt-1">{errors.company.message}</p>
+            <p className="text-sm text-accent-orange mt-1">{errors.company.message}</p>
           )}
         </div>
 
         {/* Current solution */}
         <div>
-          <Label htmlFor="currentSolution">Current CDC solution</Label>
+          <Label htmlFor="currentSolution" className="text-content-1 text-white w-full h-[24px]">
+            Current CDC solution
+          </Label>
           <Select onValueChange={(value) => setValue("currentSolution", value as FormData["currentSolution"])}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="input-field mt-2 text-white h-[44px] [&>svg:last-child]:hidden">
               <SelectValue placeholder="Select..." />
+              <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
+                <path d="M0.5 0.5L5.5 5.5L10.5 0.5" stroke="#02ACD0" strokeLinecap="round"/>
+              </svg>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="kafka">Kafka/Debezium</SelectItem>
-              <SelectItem value="dms">AWS DMS</SelectItem>
-              <SelectItem value="fivetran">Fivetran</SelectItem>
-              <SelectItem value="none">None</SelectItem>
-              <SelectItem value="other">Other</SelectItem>
+            <SelectContent className="card-dark">
+              <SelectItem value="kafka" className="text-white hover:bg-white/5">Kafka/Debezium</SelectItem>
+              <SelectItem value="dms" className="text-white hover:bg-white/5">AWS DMS</SelectItem>
+              <SelectItem value="fivetran" className="text-white hover:bg-white/5">Fivetran</SelectItem>
+              <SelectItem value="none" className="text-white hover:bg-white/5">None</SelectItem>
+              <SelectItem value="other" className="text-white hover:bg-white/5">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Data volume */}
         <div>
-          <Label htmlFor="dataVolume">Daily data volume</Label>
+          <Label htmlFor="dataVolume" className="text-content-1 text-white w-full h-[24px]">
+            Daily data volume
+          </Label>
           <Select onValueChange={(value) => setValue("dataVolume", value as FormData["dataVolume"])}>
-            <SelectTrigger className="mt-1">
+            <SelectTrigger className="input-field mt-2 text-white h-[44px] [&>svg:last-child]:hidden">
               <SelectValue placeholder="Select..." />
+              <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
+                <path d="M0.5 0.5L5.5 5.5L10.5 0.5" stroke="#02ACD0" strokeLinecap="round"/>
+              </svg>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="<10GB">&lt;10GB</SelectItem>
-              <SelectItem value="10-100GB">10-100GB</SelectItem>
-              <SelectItem value="100GB-1TB">100GB-1TB</SelectItem>
-              <SelectItem value=">1TB">&gt;1TB</SelectItem>
+            <SelectContent className="card-dark">
+              <SelectItem value="<10GB" className="text-white hover:bg-white/5">&lt;10GB</SelectItem>
+              <SelectItem value="10-100GB" className="text-white hover:bg-white/5">10-100GB</SelectItem>
+              <SelectItem value="100GB-1TB" className="text-white hover:bg-white/5">100GB-1TB</SelectItem>
+              <SelectItem value=">1TB" className="text-white hover:bg-white/5">&gt;1TB</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Message */}
         <div>
-          <Label htmlFor="message">Message (optional)</Label>
+          <Label htmlFor="message" className="text-content-1 text-white w-full h-[24px]">
+            Message (optional)
+          </Label>
           <Textarea
             id="message"
             placeholder="Tell us about your use case..."
             {...register("message")}
-            className="mt-1"
-            rows={4}
+            className="input-field mt-2 text-white placeholder:text-text-muted resize-none h-[106px]"
           />
         </div>
+      </div>
 
-        {/* Turnstile CAPTCHA */}
-        <div className="flex justify-center">
-          <Turnstile
-            ref={turnstileRef}
-            siteKey={TURNSTILE_SITE_KEY}
-            onSuccess={setTurnstileToken}
-            onError={() => setTurnstileToken(null)}
-            onExpire={() => setTurnstileToken(null)}
-          />
-        </div>
+      {/* Turnstile CAPTCHA */}
+      <div className="flex justify-center py-6">
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={TURNSTILE_SITE_KEY}
+          onSuccess={setTurnstileToken}
+          onError={() => setTurnstileToken(null)}
+          onExpire={() => setTurnstileToken(null)}
+          options={{ theme: "dark" }}
+        />
+      </div>
 
-        {/* Submit */}
+      {/* Submit */}
+      <div className="flex justify-center">
         <Button
           type="submit"
-          className="w-full bg-primary hover:bg-primary-dark"
           disabled={isSubmitting}
+          className="btn-primary w-[312px] h-[68px]"
         >
-          {isSubmitting ? 'Submitting...' : 'Request Early Access'}
+          {isSubmitting ? 'Submitting...' : 'Request Early Access  →'}
         </Button>
-
-        <p className="text-sm text-neutral-dark-gray text-center">
-          Or{' '}
-          <a href="#" className="text-primary hover:text-primary-dark underline">
-            schedule a call
-          </a>
-        </p>
-      </form>
-    </Card>
+      </div>
+    </form>
   )
 }

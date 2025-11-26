@@ -1,12 +1,11 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { DollarSign, Lock, Database } from "lucide-react"
 import { motion } from "framer-motion"
+import Image from "next/image"
 
 const problems = [
   {
-    icon: DollarSign,
+    icon: "/images/icon-dollar.svg",
     title: "Egress Fees Add Up",
     description: "Moving data between clouds is expensive",
     details: [
@@ -16,7 +15,7 @@ const problems = [
     ],
   },
   {
-    icon: Lock,
+    icon: "/images/icon-lock.svg",
     title: "Vendor Lock-in",
     description: "Staying in one cloud limits your options",
     details: [
@@ -26,8 +25,8 @@ const problems = [
     ],
   },
   {
-    icon: Database,
-    title: "Uncompressed = Wasteful",
+    icon: "/images/icon-waste.svg",
+    title: "Uncompressed =\nWasteful",
     description: "Raw database changes are bloated",
     details: [
       "Timestamps repeat constantly",
@@ -39,21 +38,21 @@ const problems = [
 
 export function Problem() {
   return (
-    <section className="section-padding bg-white">
+    <section className="section-padding bg-dark-bg-secondary">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-heading-lg text-primary mb-4">
+          <h2 className="text-h2">
             Cloud egress costs are killing your budget
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="flex flex-wrap justify-center gap-8">
           {problems.map((problem, index) => (
             <motion.div
               key={problem.title}
@@ -62,23 +61,33 @@ export function Problem() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
             >
-              <Card className="p-6 h-full hover:shadow-lg transition-shadow">
-                <problem.icon className="h-12 w-12 text-accent-orange mb-4" />
-                <h3 className="text-heading-sm text-primary mb-2">
+              <div className="problem-card p-8">
+                {/* Icon */}
+                <div className="mb-6">
+                  <Image
+                    src={problem.icon}
+                    alt=""
+                    width={63}
+                    height={63}
+                    className="w-[63px] h-[63px] icon-hover"
+                  />
+                </div>
+
+                <h3 className="text-h4 whitespace-pre-line mb-3">
                   {problem.title}
                 </h3>
-                <p className="text-body-md text-neutral-dark-gray mb-4">
+                <p className="text-content-1 text-cyan mb-6">
                   {problem.description}
                 </p>
-                <ul className="space-y-2">
+                <ul className="space-y-3">
                   {problem.details.map((detail) => (
-                    <li key={detail} className="text-sm text-neutral-dark-gray flex items-start">
-                      <span className="text-accent-orange mr-2">*</span>
+                    <li key={detail} className="flex items-start gap-3 text-content-1 text-grey">
+                      <span className="dot-cyan flex-shrink-0 mt-[10px]" />
                       {detail}
                     </li>
                   ))}
                 </ul>
-              </Card>
+              </div>
             </motion.div>
           ))}
         </div>

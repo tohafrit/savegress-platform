@@ -1,11 +1,10 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Database, Minimize2, Send } from "lucide-react"
 
 const steps = [
   {
-    icon: Database,
+    number: 1,
     title: "Capture",
     subtitle: "Connect to your database",
     details: [
@@ -16,7 +15,7 @@ const steps = [
     ],
   },
   {
-    icon: Minimize2,
+    number: 2,
     title: "Compress",
     subtitle: "Shrink your data automatically",
     details: [
@@ -26,7 +25,7 @@ const steps = [
     ],
   },
   {
-    icon: Send,
+    number: 3,
     title: "Deliver",
     subtitle: "Send anywhere",
     details: [
@@ -40,21 +39,19 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="section-padding bg-white">
-      <div className="container-custom">
+    <section id="how-it-works" className="section-padding bg-dark-bg-secondary relative overflow-hidden">
+      <div className="container-custom relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
-          <h2 className="text-heading-lg text-primary mb-4">
-            Three steps to real-time data
-          </h2>
+          <h2 className="text-h2">Three steps to real-time data</h2>
         </motion.div>
 
-        <div className="flex flex-col md:flex-row items-start justify-between gap-8 md:gap-4">
+        <div className="flex flex-wrap justify-center gap-8">
           {steps.map((step, index) => (
             <motion.div
               key={step.title}
@@ -62,40 +59,46 @@ export function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.2 }}
-              className="flex-1"
             >
-              <div className="flex flex-col items-center md:items-start">
-                {/* Step number */}
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white font-bold text-xl">
-                    {index + 1}
-                  </div>
-                  <step.icon className="h-10 w-10 text-accent-orange" />
-                </div>
+              <div className="step-card p-8 flex flex-col">
+                {/* Background number */}
+                <span className="step-number-bg">{step.number}</span>
+
+                {/* Arrow icon */}
+                <svg
+                  className="absolute bottom-6 right-6"
+                  width="50"
+                  height="50"
+                  viewBox="0 0 50 50"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect x="0.5" y="0.5" width="49" height="49" rx="24.5" stroke="#00B4D8"/>
+                  <path d="M18 32.5076L31.5076 19M31.5076 19V30.3888M31.5076 19H20.3837" stroke="#00B4D8" strokeLinecap="round"/>
+                </svg>
 
                 {/* Content */}
-                <h3 className="text-heading-sm text-primary mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-body-md text-neutral-dark-gray font-semibold mb-4">
-                  {step.subtitle}
-                </p>
-                <ul className="space-y-2">
+                <h3 className="text-h3 mb-2">{step.title}</h3>
+                <p className="text-content-1 text-cyan mb-6">{step.subtitle}</p>
+
+                <ul className="space-y-3 flex-1">
                   {step.details.map((detail) => (
-                    <li key={detail} className="text-sm text-neutral-dark-gray flex items-start">
-                      <span className="text-primary mr-2">*</span>
+                    <li key={detail} className="flex items-start gap-3 text-content-1 text-grey">
+                      <svg
+                        className="flex-shrink-0 mt-[10px]"
+                        width="8"
+                        height="9"
+                        viewBox="0 0 8 9"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M7.5 4.33008L0 -4.95911e-05V8.66021L7.5 4.33008Z" fill="#00B4D8"/>
+                      </svg>
                       {detail}
                     </li>
                   ))}
                 </ul>
               </div>
-
-              {/* Arrow (except last step) */}
-              {index < steps.length - 1 && (
-                <div className="hidden md:flex items-center justify-center mt-8">
-                  <div className="text-4xl text-gray-300">-&gt;</div>
-                </div>
-              )}
             </motion.div>
           ))}
         </div>
