@@ -1,8 +1,11 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/smtp"
 	"strings"
 
@@ -97,9 +100,37 @@ IP Address: %s
 }
 
 func (s *EarlyAccessService) sendViaResend(to, subject, body string) error {
-	// Resend API implementation
-	// POST https://api.resend.com/emails
-	// For now, this is a placeholder - would use http.Client
+	payload := map[string]interface{}{
+		"from":    "Savegress <onboarding@resend.dev>",
+		"to":      []string{to},
+		"subject": subject,
+		"text":    body,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal email payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+s.resendKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resend API error: status %d", resp.StatusCode)
+	}
+
 	return nil
 }
 
