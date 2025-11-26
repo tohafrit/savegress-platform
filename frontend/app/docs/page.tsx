@@ -35,7 +35,7 @@ export default function Documentation() {
             <div className="border border-gray-200 rounded-lg p-6 hover:border-accent-blue transition-colors">
               <h2 className="text-xl font-semibold text-primary mb-3">Concepts</h2>
               <p className="text-gray-600 mb-4">
-                Understand how CDC works and how Savegress achieves up to 200x compression.
+                Understand how CDC works and how Savegress achieves 10x–150x compression.
               </p>
               <a href="#concepts" className="text-accent-blue hover:underline">Learn more &rarr;</a>
             </div>
@@ -115,7 +115,7 @@ CREATE USER savegress_replication REPLICATION LOGIN;`}</pre>
               <div>
                 <h3 className="text-xl font-semibold text-primary mb-3">Delta Compression</h3>
                 <p className="text-gray-700 mb-4">
-                  Savegress uses advanced delta compression algorithms to minimize the amount of data transferred. By sending only the differences between states, we achieve compression ratios up to 200x compared to full data transfers.
+                  Savegress uses advanced delta compression algorithms to minimize the amount of data transferred. By sending only the differences between states, we achieve compression ratios of 10x–150x depending on data patterns (typical CDC workloads see 12x).
                 </p>
               </div>
 

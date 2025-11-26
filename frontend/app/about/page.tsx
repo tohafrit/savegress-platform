@@ -34,7 +34,7 @@ export default function About() {
             <section className="mb-12">
               <h2 className="text-2xl font-semibold text-primary mb-4">What We Do</h2>
               <p className="text-gray-700 mb-4">
-                Savegress provides Change Data Capture (CDC) technology that streams only the changes from your databases, not the entire dataset. Combined with our advanced compression algorithms, we reduce the amount of data transferred by up to 200x.
+                Savegress provides Change Data Capture (CDC) technology that streams only the changes from your databases, not the entire dataset. Combined with our advanced compression algorithms, we reduce the amount of data transferred by 10x–150x depending on data patterns.
               </p>
               <p className="text-gray-700 mb-4">
                 This means you can replicate your PostgreSQL or MySQL databases across any cloud provider while paying a fraction of traditional egress costs.

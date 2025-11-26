@@ -14,12 +14,12 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "Savegress - Replicate data across clouds. Pay less for egress.",
-  description: "Stream database changes between AWS, GCP, and Azure. Compress up to 200x to cut your data transfer costs.",
+  description: "Stream database changes between AWS, GCP, and Azure. Compress 10x–150x to cut your data transfer costs.",
   keywords: ["CDC", "Change Data Capture", "Multi-cloud", "Database Replication", "PostgreSQL", "MySQL"],
   authors: [{ name: "Savegress" }],
   openGraph: {
     title: "Savegress - Replicate data across clouds. Pay less for egress.",
-    description: "Stream database changes between AWS, GCP, and Azure. Compress up to 200x to cut your data transfer costs.",
+    description: "Stream database changes between AWS, GCP, and Azure. Compress 10x–150x to cut your data transfer costs.",
     url: "https://savegress.com",
     siteName: "Savegress",
     type: "website",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Savegress - Replicate data across clouds. Pay less for egress.",
-    description: "Stream database changes between AWS, GCP, and Azure. Compress up to 200x to cut your data transfer costs.",
+    description: "Stream database changes between AWS, GCP, and Azure. Compress 10x–150x to cut your data transfer costs.",
   },
 }
 
