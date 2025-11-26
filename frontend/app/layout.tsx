@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
-  manifest: "/site.webmanifest",
+  manifest: "/manifest.json",
   openGraph: {
     title: "Savegress - Replicate data across clouds. Pay less for egress.",
     description: "Stream database changes between AWS, GCP, and Azure. Compress 10x–150x to cut your data transfer costs.",
