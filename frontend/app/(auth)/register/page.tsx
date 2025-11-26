@@ -41,21 +41,24 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8">
-      <h1 className="text-2xl font-bold text-primary mb-6 text-center">
-        Create your account
+    <div className="card-dark p-8 md:p-10">
+      <h1 className="text-h3 text-white mb-2 text-center">
+        Create account
       </h1>
+      <p className="text-content-1 text-grey mb-8 text-center">
+        Get started with Savegress
+      </p>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+        <div className="mb-6 p-3 bg-accent-orange/10 border border-accent-orange/30 text-accent-orange rounded-lg text-sm">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-            Full name
+          <label htmlFor="name" className="text-content-1 text-white block mb-2">
+            Full name <span className="text-cyan">*</span>
           </label>
           <input
             id="name"
@@ -63,14 +66,14 @@ export default function RegisterPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="input-field w-full h-[44px] text-white placeholder:text-text-muted"
             placeholder="John Doe"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-            Email address
+          <label htmlFor="email" className="text-content-1 text-white block mb-2">
+            Email address <span className="text-cyan">*</span>
           </label>
           <input
             id="email"
@@ -78,14 +81,14 @@ export default function RegisterPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            placeholder="you@example.com"
+            className="input-field w-full h-[44px] text-white placeholder:text-text-muted"
+            placeholder="you@company.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-            Password
+          <label htmlFor="password" className="text-content-1 text-white block mb-2">
+            Password <span className="text-cyan">*</span>
           </label>
           <input
             id="password"
@@ -93,14 +96,14 @@ export default function RegisterPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="input-field w-full h-[44px] text-white placeholder:text-text-muted"
             placeholder="••••••••"
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-dark-gray mb-1">
-            Confirm password
+          <label htmlFor="confirmPassword" className="text-content-1 text-white block mb-2">
+            Confirm password <span className="text-cyan">*</span>
           </label>
           <input
             id="confirmPassword"
@@ -108,30 +111,30 @@ export default function RegisterPage() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            className="input-field w-full h-[44px] text-white placeholder:text-text-muted"
             placeholder="••••••••"
           />
         </div>
 
-        <div className="text-sm text-neutral-dark-gray">
+        <p className="text-mini-1 text-grey">
           By creating an account, you agree to our{' '}
-          <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link>
+          <Link href="/terms" className="text-cyan hover:text-cyan/80">Terms of Service</Link>
           {' '}and{' '}
-          <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
-        </div>
+          <Link href="/privacy" className="text-cyan hover:text-cyan/80">Privacy Policy</Link>.
+        </p>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary w-full h-[52px]"
         >
-          {isLoading ? 'Creating account...' : 'Create account'}
+          {isLoading ? 'Creating account...' : 'Create account  →'}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-neutral-dark-gray">
+      <p className="mt-8 text-center text-content-1 text-grey">
         Already have an account?{' '}
-        <Link href="/login" className="text-primary hover:underline font-medium">
+        <Link href="/login" className="text-cyan hover:text-cyan/80 transition-colors">
           Sign in
         </Link>
       </p>

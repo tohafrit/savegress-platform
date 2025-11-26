@@ -76,13 +76,13 @@ export function Specs() {
 
                 {/* Content */}
                 {card.content === 'specs' && (
-                  <div className="flex justify-between relative z-10">
-                    <div className="text-content-2 text-cyan w-[230px]">
-                      {specs.map((spec) => <div key={spec.label}>{spec.label}</div>)}
-                    </div>
-                    <div className="text-content-2 text-grey text-right">
-                      {specs.map((spec) => <div key={spec.value}>{spec.value}</div>)}
-                    </div>
+                  <div className="relative z-10 space-y-1">
+                    {specs.map((spec) => (
+                      <div key={spec.label} className="flex justify-between gap-4">
+                        <span className="text-content-2 text-cyan">{spec.label}</span>
+                        <span className="text-content-2 text-grey text-right">{spec.value}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
 

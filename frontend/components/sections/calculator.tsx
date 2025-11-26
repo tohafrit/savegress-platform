@@ -6,10 +6,30 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion } from "framer-motion"
 import { useCountUp } from "@/hooks/use-count-up"
 
+// Egress pricing per GB by cloud and region
+// Source: AWS, GCP, Azure official pricing pages
 const EGRESS_PRICING = {
-  AWS: 0.09,
-  GCP: 0.08,
-  Azure: 0.087,
+  AWS: {
+    "us-east": 0.09,
+    "eu-west": 0.09,
+    "ap-southeast": 0.114,
+  },
+  GCP: {
+    "us-east": 0.12,
+    "eu-west": 0.12,
+    "ap-southeast": 0.15,
+  },
+  Azure: {
+    "us-east": 0.087,
+    "eu-west": 0.087,
+    "ap-southeast": 0.12,
+  },
+}
+
+const REGIONS = {
+  "us-east": "North America",
+  "eu-west": "Europe",
+  "ap-southeast": "Asia Pacific",
 }
 
 const COMPRESSION_RATIOS = {
@@ -21,10 +41,11 @@ const COMPRESSION_RATIOS = {
 export function Calculator() {
   const [dailyGB, setDailyGB] = useState(100)
   const [sourceCloud, setSourceCloud] = useState<keyof typeof EGRESS_PRICING>("AWS")
+  const [region, setRegion] = useState<keyof typeof REGIONS>("us-east")
   const [dataPattern, setDataPattern] = useState<keyof typeof COMPRESSION_RATIOS>("mixed")
 
   const monthlyGB = dailyGB * 30
-  const pricePerGB = EGRESS_PRICING[sourceCloud]
+  const pricePerGB = EGRESS_PRICING[sourceCloud][region]
   const compressionRatio = COMPRESSION_RATIOS[dataPattern].ratio
 
   const currentMonthlyCost = monthlyGB * pricePerGB
@@ -106,22 +127,40 @@ export function Calculator() {
                 </div>
               </div>
 
-              {/* Source cloud */}
-              <div>
-                <Label className="text-content-1 text-grey mb-3 block w-full max-w-[478px]">Source cloud</Label>
-                <Select value={sourceCloud} onValueChange={(v) => setSourceCloud(v as keyof typeof EGRESS_PRICING)}>
-                  <SelectTrigger className="input-field w-full max-w-[480px] h-[44px] text-white [&>svg:last-child]:hidden">
-                    <SelectValue />
-                    <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
-                      <path d="M0.5 0.5L5.5 5.5L10.5 0.5" stroke="#02ACD0" strokeLinecap="round"/>
-                    </svg>
-                  </SelectTrigger>
-                  <SelectContent className="bg-dark-bg-card border-white/10">
-                    <SelectItem value="AWS" className="text-white hover:bg-white/5">AWS</SelectItem>
-                    <SelectItem value="GCP" className="text-white hover:bg-white/5">GCP</SelectItem>
-                    <SelectItem value="Azure" className="text-white hover:bg-white/5">Azure</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Source cloud and region */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <Label className="text-content-1 text-grey mb-3 block">Source cloud</Label>
+                  <Select value={sourceCloud} onValueChange={(v) => setSourceCloud(v as keyof typeof EGRESS_PRICING)}>
+                    <SelectTrigger className="input-field w-full h-[44px] text-white [&>svg:last-child]:hidden">
+                      <SelectValue />
+                      <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
+                        <path d="M0.5 0.5L5.5 5.5L10.5 0.5" stroke="#02ACD0" strokeLinecap="round"/>
+                      </svg>
+                    </SelectTrigger>
+                    <SelectContent className="bg-dark-bg-card border-white/10">
+                      <SelectItem value="AWS" className="text-white hover:bg-white/5">AWS</SelectItem>
+                      <SelectItem value="GCP" className="text-white hover:bg-white/5">GCP</SelectItem>
+                      <SelectItem value="Azure" className="text-white hover:bg-white/5">Azure</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <Label className="text-content-1 text-grey mb-3 block">Region</Label>
+                  <Select value={region} onValueChange={(v) => setRegion(v as keyof typeof REGIONS)}>
+                    <SelectTrigger className="input-field w-full h-[44px] text-white [&>svg:last-child]:hidden">
+                      <SelectValue />
+                      <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
+                        <path d="M0.5 0.5L5.5 5.5L10.5 0.5" stroke="#02ACD0" strokeLinecap="round"/>
+                      </svg>
+                    </SelectTrigger>
+                    <SelectContent className="bg-dark-bg-card border-white/10">
+                      <SelectItem value="us-east" className="text-white hover:bg-white/5">North America</SelectItem>
+                      <SelectItem value="eu-west" className="text-white hover:bg-white/5">Europe</SelectItem>
+                      <SelectItem value="ap-southeast" className="text-white hover:bg-white/5">Asia Pacific</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Data pattern */}
@@ -171,7 +210,7 @@ export function Calculator() {
               </div>
 
               <p className="text-mini-3 text-grey mt-6 w-full max-w-[480px]">
-                * Based on {sourceCloud} egress pricing (${pricePerGB}/GB). Compression ranges from 5x (JSON) to 150x (time-series). Typical mixed CDC: 12x.
+                * Egress pricing: {sourceCloud} {REGIONS[region]} at ${pricePerGB}/GB. Actual prices may vary by specific region, volume tier, and commitment. Compression: 5x (JSON) to 150x (time-series).
               </p>
             </div>
           </div>

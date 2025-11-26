@@ -60,10 +60,15 @@ export function Footer() {
         {/* Divider line */}
         <div className="w-full h-[1px] border-t border-dashed border-[#02ACD0]/50 mb-6 md:mb-8" />
 
-        <div className="flex justify-center pt-4 md:pt-8">
+        <div className="flex flex-col items-center pt-4 md:pt-8 gap-4">
           <p className="text-mini-1 text-cyan w-full max-w-[592px] text-center">
             &copy; {currentYear} Savegress. All rights reserved.
           </p>
+{/*
+          <p className="text-mini-1 text-gray-500 w-full max-w-[720px] text-center text-[11px] leading-relaxed">
+            AWS is a trademark of Amazon.com, Inc. Google Cloud is a trademark of Google LLC. Microsoft Azure is a trademark of Microsoft Corporation. Savegress is not affiliated with or endorsed by these companies.
+          </p>
+*/}
         </div>
       </div>
     </footer>
