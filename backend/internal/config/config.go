@@ -42,16 +42,21 @@ type Config struct {
 	SMTPPassword string
 	SMTPFrom     string
 
-	// Downloads
-	DownloadsBucket string
-	DownloadsRegion string
+	// Downloads / S3
+	DownloadsBucket    string
+	DownloadsRegion    string
+	S3Endpoint         string // For MinIO or S3-compatible storage
+	S3AccessKeyID      string
+	S3SecretAccessKey  string
 
 	// Turnstile (Cloudflare)
 	TurnstileSecretKey string
 
 	// Admin/Notifications
-	AdminEmail string
-	ResendAPIKey string
+	AdminEmail    string
+	ResendAPIKey  string
+	EmailProvider string // "smtp", "resend", "sendgrid", or empty for noop
+	BaseURL       string // Base URL for email links (e.g., https://app.savegress.io)
 
 	// Encryption
 	EncryptionKey string
@@ -82,9 +87,14 @@ func Load() (*Config, error) {
 		SMTPFrom:           getEnv("SMTP_FROM", "noreply@savegress.io"),
 		DownloadsBucket:    getEnv("DOWNLOADS_BUCKET", "savegress-releases"),
 		DownloadsRegion:    getEnv("DOWNLOADS_REGION", "eu-central-1"),
+		S3Endpoint:         getEnv("S3_ENDPOINT", ""), // Empty for AWS S3, set for MinIO
+		S3AccessKeyID:      getEnv("S3_ACCESS_KEY_ID", ""),
+		S3SecretAccessKey:  getEnv("S3_SECRET_ACCESS_KEY", ""),
 		TurnstileSecretKey: getEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA"), // Test key
 		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
 		ResendAPIKey:       getEnv("RESEND_API_KEY", ""),
+		EmailProvider:      getEnv("EMAIL_PROVIDER", ""), // smtp, resend, sendgrid
+		BaseURL:            getEnv("BASE_URL", "http://localhost:3000"),
 		EncryptionKey:      getEnv("ENCRYPTION_KEY", "savegress-dev-encryption-key32"), // Must be 32 bytes for AES-256
 	}
 

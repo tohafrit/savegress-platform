@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -280,10 +281,62 @@ func (h *LicenseHandler) GetActivations(w http.ResponseWriter, r *http.Request) 
 	respondSuccess(w, map[string]interface{}{"activations": activations})
 }
 
-// ListAll returns all licenses (admin only)
+// ListAll returns all licenses (admin only) with pagination
 func (h *LicenseHandler) ListAll(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement with pagination
-	respondError(w, http.StatusNotImplemented, "not implemented")
+	claims := middleware.GetUserFromContext(r.Context())
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// Admin only
+	if claims.Role != "admin" {
+		respondError(w, http.StatusForbidden, "admin access required")
+		return
+	}
+
+	// Parse pagination parameters
+	page := 1
+	limit := 20
+
+	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
+		if p, err := parseInt(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		if l, err := parseInt(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+
+	// Parse optional filters
+	tier := r.URL.Query().Get("tier")
+	status := r.URL.Query().Get("status")
+
+	// Get paginated licenses
+	licenses, total, err := h.licenseService.GetAllLicensesPaginated(r.Context(), page, limit, tier, status)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to get licenses")
+		return
+	}
+
+	respondSuccess(w, map[string]interface{}{
+		"licenses": licenses,
+		"pagination": map[string]interface{}{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": (total + limit - 1) / limit,
+		},
+	})
+}
+
+// parseInt is a helper to parse string to int
+func parseInt(s string) (int, error) {
+	var n int
+	_, err := fmt.Sscanf(s, "%d", &n)
+	return n, err
 }
 
 // AdminGenerate generates a license (admin only)

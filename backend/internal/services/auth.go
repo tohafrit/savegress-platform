@@ -15,10 +15,12 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid email or password")
-	ErrUserExists         = errors.New("user with this email already exists")
-	ErrUserNotFound       = errors.New("user not found")
-	ErrInvalidToken       = errors.New("invalid or expired token")
+	ErrInvalidCredentials   = errors.New("invalid email or password")
+	ErrUserExists           = errors.New("user with this email already exists")
+	ErrUserNotFound         = errors.New("user not found")
+	ErrInvalidToken         = errors.New("invalid or expired token")
+	ErrResetTokenExpired    = errors.New("password reset token has expired")
+	ErrResetTokenUsed       = errors.New("password reset token has already been used")
 )
 
 // AuthService handles authentication
@@ -196,6 +198,143 @@ func (s *AuthService) GetUserByID(ctx context.Context, userID uuid.UUID) (*model
 		SELECT id, email, name, COALESCE(company, ''), role, email_verified, COALESCE(stripe_customer_id, ''), created_at, updated_at, last_login_at
 		FROM users WHERE id = $1
 	`, userID).Scan(&user.ID, &user.Email, &user.Name, &user.Company, &user.Role, &user.EmailVerified, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+	return &user, nil
+}
+
+// CreatePasswordResetToken creates a password reset token for a user
+func (s *AuthService) CreatePasswordResetToken(ctx context.Context, email string) (string, error) {
+	// Find user by email
+	var userID uuid.UUID
+	err := s.db.Pool().QueryRow(ctx, "SELECT id FROM users WHERE email = $1", email).Scan(&userID)
+	if err != nil {
+		// Don't reveal if user exists - silently return
+		return "", nil
+	}
+
+	// Generate secure token using UUIDs
+	token := uuid.New().String() + uuid.New().String()
+	token = token[:64] // 64 character token
+
+	// Hash the token for storage (we'll verify with bcrypt)
+	tokenHash, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("failed to hash token: %w", err)
+	}
+
+	// Store reset token (expires in 1 hour)
+	resetID := uuid.New()
+	expiresAt := time.Now().Add(time.Hour)
+
+	_, err = s.db.Pool().Exec(ctx, `
+		INSERT INTO password_resets (id, user_id, token, expires_at, created_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`, resetID, userID, string(tokenHash), expiresAt, time.Now().UTC())
+	if err != nil {
+		return "", fmt.Errorf("failed to store reset token: %w", err)
+	}
+
+	// Return the raw token (to be sent via email)
+	return token, nil
+}
+
+// ValidatePasswordResetToken validates a password reset token
+func (s *AuthService) ValidatePasswordResetToken(ctx context.Context, token string) (*models.PasswordReset, error) {
+	rows, err := s.db.Pool().Query(ctx, `
+		SELECT id, user_id, token, expires_at, used_at, created_at
+		FROM password_resets
+		WHERE expires_at > NOW() AND used_at IS NULL
+		ORDER BY created_at DESC
+	`)
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+	defer rows.Close()
+
+	// Check each recent token
+	for rows.Next() {
+		var reset models.PasswordReset
+		if err := rows.Scan(&reset.ID, &reset.UserID, &reset.Token, &reset.ExpiresAt, &reset.UsedAt, &reset.CreatedAt); err != nil {
+			continue
+		}
+
+		// Compare with bcrypt
+		if err := bcrypt.CompareHashAndPassword([]byte(reset.Token), []byte(token)); err == nil {
+			return &reset, nil
+		}
+	}
+
+	return nil, ErrInvalidToken
+}
+
+// ResetPassword resets a user's password using a valid token
+func (s *AuthService) ResetPassword(ctx context.Context, token, newPassword string) error {
+	// Validate the token
+	reset, err := s.ValidatePasswordResetToken(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	// Check if already used
+	if reset.UsedAt != nil {
+		return ErrResetTokenUsed
+	}
+
+	// Check expiration
+	if time.Now().After(reset.ExpiresAt) {
+		return ErrResetTokenExpired
+	}
+
+	// Hash new password
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update password and mark token as used (in a transaction)
+	tx, err := s.db.Pool().Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Update password
+	_, err = tx.Exec(ctx, `
+		UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3
+	`, string(hash), time.Now().UTC(), reset.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	// Mark token as used
+	now := time.Now().UTC()
+	_, err = tx.Exec(ctx, `
+		UPDATE password_resets SET used_at = $1 WHERE id = $2
+	`, now, reset.ID)
+	if err != nil {
+		return fmt.Errorf("failed to mark token as used: %w", err)
+	}
+
+	// Revoke all refresh tokens for this user (force re-login)
+	_, err = tx.Exec(ctx, `
+		UPDATE refresh_tokens SET revoked_at = $1 WHERE user_id = $2 AND revoked_at IS NULL
+	`, now, reset.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to revoke tokens: %w", err)
+	}
+
+	return tx.Commit(ctx)
+}
+
+// GetUserByEmail retrieves a user by email
+func (s *AuthService) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	err := s.db.Pool().QueryRow(ctx, `
+		SELECT id, email, name, COALESCE(company, ''), role, email_verified, COALESCE(stripe_customer_id, ''), created_at, updated_at, last_login_at
+		FROM users WHERE email = $1
+	`, email).Scan(&user.ID, &user.Email, &user.Name, &user.Company, &user.Role, &user.EmailVerified, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
 	if err != nil {
 		return nil, ErrUserNotFound
 	}

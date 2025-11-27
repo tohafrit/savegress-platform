@@ -344,3 +344,68 @@ func (s *LicenseService) getMaxActivations(tier string) int {
 		return 1
 	}
 }
+
+// GetAllLicensesPaginated returns all licenses with pagination and optional filters
+func (s *LicenseService) GetAllLicensesPaginated(ctx context.Context, page, limit int, tier, status string) ([]models.License, int, error) {
+	offset := (page - 1) * limit
+
+	// Build query with optional filters
+	query := `
+		SELECT id, user_id, license_key, tier, status, max_sources, max_tables, max_throughput,
+			   features, hardware_id, issued_at, expires_at, revoked_at, created_at
+		FROM licenses WHERE 1=1`
+	countQuery := `SELECT COUNT(*) FROM licenses WHERE 1=1`
+
+	args := []interface{}{}
+	argCount := 0
+
+	if tier != "" {
+		argCount++
+		query += fmt.Sprintf(" AND tier = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND tier = $%d", argCount)
+		args = append(args, tier)
+	}
+
+	if status != "" {
+		argCount++
+		query += fmt.Sprintf(" AND status = $%d", argCount)
+		countQuery += fmt.Sprintf(" AND status = $%d", argCount)
+		args = append(args, status)
+	}
+
+	// Get total count
+	var total int
+	err := s.db.Pool().QueryRow(ctx, countQuery, args...).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count licenses: %w", err)
+	}
+
+	// Add pagination
+	argCount++
+	query += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d", argCount)
+	args = append(args, limit)
+	argCount++
+	query += fmt.Sprintf(" OFFSET $%d", argCount)
+	args = append(args, offset)
+
+	// Execute query
+	rows, err := s.db.Pool().Query(ctx, query, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query licenses: %w", err)
+	}
+	defer rows.Close()
+
+	licenses := make([]models.License, 0)
+	for rows.Next() {
+		var l models.License
+		err := rows.Scan(&l.ID, &l.UserID, &l.LicenseKey, &l.Tier, &l.Status,
+			&l.MaxSources, &l.MaxTables, &l.MaxThroughput, &l.Features,
+			&l.HardwareID, &l.IssuedAt, &l.ExpiresAt, &l.RevokedAt, &l.CreatedAt)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to scan license: %w", err)
+		}
+		licenses = append(licenses, l)
+	}
+
+	return licenses, total, nil
+}

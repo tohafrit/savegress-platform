@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/savegress/platform/backend/internal/services"
@@ -9,12 +10,16 @@ import (
 
 // AuthHandler handles authentication endpoints
 type AuthHandler struct {
-	authService *services.AuthService
+	authService  *services.AuthService
+	emailService *services.EmailService
 }
 
 // NewAuthHandler creates a new auth handler
-func NewAuthHandler(authService *services.AuthService) *AuthHandler {
-	return &AuthHandler{authService: authService}
+func NewAuthHandler(authService *services.AuthService, emailService *services.EmailService) *AuthHandler {
+	return &AuthHandler{
+		authService:  authService,
+		emailService: emailService,
+	}
 }
 
 type registerRequest struct {
@@ -131,8 +136,26 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Implement password reset email
-	// For now, just return success (don't reveal if email exists)
+	if req.Email == "" {
+		respondError(w, http.StatusBadRequest, "email is required")
+		return
+	}
+
+	// Create reset token (this returns empty string if user doesn't exist, for security)
+	token, err := h.authService.CreatePasswordResetToken(r.Context(), req.Email)
+	if err != nil {
+		// Log error but don't expose to user
+		log.Printf("Error creating password reset token: %v", err)
+	}
+
+	// Send email if token was created and email service is configured
+	if token != "" && h.emailService != nil {
+		if err := h.emailService.SendPasswordResetEmail(r.Context(), req.Email, token); err != nil {
+			log.Printf("Error sending password reset email: %v", err)
+		}
+	}
+
+	// Always return success (don't reveal if email exists)
 	respondSuccess(w, map[string]string{
 		"message": "if an account exists with this email, a reset link has been sent",
 	})
@@ -149,6 +172,33 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Implement password reset
-	respondError(w, http.StatusNotImplemented, "not implemented")
+	if req.Token == "" {
+		respondError(w, http.StatusBadRequest, "token is required")
+		return
+	}
+
+	if req.Password == "" || len(req.Password) < 8 {
+		respondError(w, http.StatusBadRequest, "password must be at least 8 characters")
+		return
+	}
+
+	// Reset the password
+	err := h.authService.ResetPassword(r.Context(), req.Token, req.Password)
+	if err != nil {
+		switch err {
+		case services.ErrInvalidToken:
+			respondError(w, http.StatusBadRequest, "invalid or expired reset token")
+		case services.ErrResetTokenExpired:
+			respondError(w, http.StatusBadRequest, "reset token has expired")
+		case services.ErrResetTokenUsed:
+			respondError(w, http.StatusBadRequest, "reset token has already been used")
+		default:
+			respondError(w, http.StatusInternalServerError, "failed to reset password")
+		}
+		return
+	}
+
+	respondSuccess(w, map[string]string{
+		"message": "password has been reset successfully",
+	})
 }

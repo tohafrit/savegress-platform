@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stripe/stripe-go/v76"
@@ -11,6 +12,7 @@ import (
 	checkoutsession "github.com/stripe/stripe-go/v76/checkout/session"
 	"github.com/stripe/stripe-go/v76/customer"
 	"github.com/stripe/stripe-go/v76/paymentmethod"
+	"github.com/stripe/stripe-go/v76/setupintent"
 	"github.com/stripe/stripe-go/v76/subscription"
 	"github.com/stripe/stripe-go/v76/webhook"
 
@@ -19,8 +21,11 @@ import (
 )
 
 var (
-	ErrNoSubscription = errors.New("no active subscription")
-	ErrInvalidWebhook = errors.New("invalid webhook signature")
+	ErrNoSubscription     = errors.New("no active subscription")
+	ErrInvalidWebhook     = errors.New("invalid webhook signature")
+	ErrInvalidPlan        = errors.New("invalid plan")
+	ErrSamePlan           = errors.New("already on this plan")
+	ErrPaymentMethodNotFound = errors.New("payment method not found")
 )
 
 // BillingService handles Stripe billing
@@ -231,5 +236,213 @@ func (s *BillingService) getPriceID(plan string) string {
 		return s.enterprisePriceID
 	default:
 		return ""
+	}
+}
+
+// SetPriceIDs sets the Stripe price IDs for subscription plans
+func (s *BillingService) SetPriceIDs(proPriceID, enterprisePriceID string) {
+	s.proPriceID = proPriceID
+	s.enterprisePriceID = enterprisePriceID
+}
+
+// UpdateSubscriptionPlan changes a subscription to a different plan (upgrade/downgrade)
+func (s *BillingService) UpdateSubscriptionPlan(ctx context.Context, userID uuid.UUID, newPlan string) (*models.Subscription, error) {
+	// Get current subscription
+	sub, err := s.GetSubscription(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Validate new plan
+	newPriceID := s.getPriceID(newPlan)
+	if newPriceID == "" {
+		return nil, ErrInvalidPlan
+	}
+
+	// Check if already on this plan
+	if sub.Plan == newPlan {
+		return nil, ErrSamePlan
+	}
+
+	// Get subscription items
+	stripeSub, err := subscription.Get(sub.StripeSubscriptionID, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Stripe subscription: %w", err)
+	}
+
+	if len(stripeSub.Items.Data) == 0 {
+		return nil, fmt.Errorf("subscription has no items")
+	}
+
+	// Update the subscription item with new price
+	itemID := stripeSub.Items.Data[0].ID
+	params := &stripe.SubscriptionParams{
+		Items: []*stripe.SubscriptionItemsParams{
+			{
+				ID:    stripe.String(itemID),
+				Price: stripe.String(newPriceID),
+			},
+		},
+		ProrationBehavior: stripe.String(string(stripe.SubscriptionSchedulePhaseProrationBehaviorCreateProrations)),
+	}
+
+	updatedSub, err := subscription.Update(sub.StripeSubscriptionID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	// Update local record
+	_, err = s.db.Pool().Exec(ctx, `
+		UPDATE subscriptions
+		SET plan = $1, stripe_price_id = $2, updated_at = NOW()
+		WHERE id = $3
+	`, newPlan, newPriceID, sub.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update local subscription: %w", err)
+	}
+
+	sub.Plan = newPlan
+	sub.StripePriceID = newPriceID
+	sub.CurrentPeriodEnd = time.Unix(updatedSub.CurrentPeriodEnd, 0)
+
+	return sub, nil
+}
+
+// AttachPaymentMethod attaches a payment method to a customer
+func (s *BillingService) AttachPaymentMethod(ctx context.Context, stripeCustomerID, paymentMethodID string) error {
+	params := &stripe.PaymentMethodAttachParams{
+		Customer: stripe.String(stripeCustomerID),
+	}
+
+	_, err := paymentmethod.Attach(paymentMethodID, params)
+	if err != nil {
+		return fmt.Errorf("failed to attach payment method: %w", err)
+	}
+
+	return nil
+}
+
+// DetachPaymentMethod removes a payment method from a customer
+func (s *BillingService) DetachPaymentMethod(ctx context.Context, paymentMethodID string) error {
+	_, err := paymentmethod.Detach(paymentMethodID, nil)
+	if err != nil {
+		return fmt.Errorf("failed to detach payment method: %w", err)
+	}
+	return nil
+}
+
+// SetDefaultPaymentMethod sets the default payment method for a customer
+func (s *BillingService) SetDefaultPaymentMethod(ctx context.Context, stripeCustomerID, paymentMethodID string) error {
+	params := &stripe.CustomerParams{
+		InvoiceSettings: &stripe.CustomerInvoiceSettingsParams{
+			DefaultPaymentMethod: stripe.String(paymentMethodID),
+		},
+	}
+
+	_, err := customer.Update(stripeCustomerID, params)
+	if err != nil {
+		return fmt.Errorf("failed to set default payment method: %w", err)
+	}
+	return nil
+}
+
+// CreateSetupIntent creates a SetupIntent for adding a new payment method via Stripe.js
+func (s *BillingService) CreateSetupIntent(ctx context.Context, stripeCustomerID string) (string, error) {
+	params := &stripe.SetupIntentParams{
+		Customer: stripe.String(stripeCustomerID),
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+	}
+
+	// Import setupintent package
+	intent, err := setupintent.New(params)
+	if err != nil {
+		return "", fmt.Errorf("failed to create setup intent: %w", err)
+	}
+
+	return intent.ClientSecret, nil
+}
+
+// CreateOrUpdateSubscription creates a subscription from a checkout session or updates existing
+func (s *BillingService) CreateOrUpdateSubscription(ctx context.Context, userID uuid.UUID, stripeSubID, stripePriceID, plan, status string, periodStart, periodEnd int64) error {
+	// Check if subscription exists
+	var existingID uuid.UUID
+	err := s.db.Pool().QueryRow(ctx, `
+		SELECT id FROM subscriptions WHERE user_id = $1
+	`, userID).Scan(&existingID)
+
+	if err == nil {
+		// Update existing
+		_, err = s.db.Pool().Exec(ctx, `
+			UPDATE subscriptions
+			SET stripe_subscription_id = $1, stripe_price_id = $2, plan = $3, status = $4,
+				current_period_start = to_timestamp($5), current_period_end = to_timestamp($6), updated_at = NOW()
+			WHERE id = $7
+		`, stripeSubID, stripePriceID, plan, status,
+			periodStart, periodEnd, existingID)
+		return err
+	}
+
+	// Create new
+	subID := uuid.New()
+	_, err = s.db.Pool().Exec(ctx, `
+		INSERT INTO subscriptions (id, user_id, stripe_subscription_id, stripe_price_id, plan, status,
+			current_period_start, current_period_end, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, to_timestamp($7), to_timestamp($8), NOW(), NOW())
+	`, subID, userID, stripeSubID, stripePriceID, plan, status, periodStart, periodEnd)
+	return err
+}
+
+// UpdateSubscriptionStatus updates subscription status in the database
+func (s *BillingService) UpdateSubscriptionStatus(ctx context.Context, stripeSubID, status string, cancelAtPeriodEnd bool) error {
+	_, err := s.db.Pool().Exec(ctx, `
+		UPDATE subscriptions
+		SET status = $1, cancel_at_period_end = $2, updated_at = NOW()
+		WHERE stripe_subscription_id = $3
+	`, status, cancelAtPeriodEnd, stripeSubID)
+	return err
+}
+
+// DeleteSubscription marks a subscription as canceled
+func (s *BillingService) DeleteSubscription(ctx context.Context, stripeSubID string) error {
+	_, err := s.db.Pool().Exec(ctx, `
+		UPDATE subscriptions
+		SET status = 'canceled', updated_at = NOW()
+		WHERE stripe_subscription_id = $1
+	`, stripeSubID)
+	return err
+}
+
+// RecordInvoice stores invoice information from Stripe webhook
+func (s *BillingService) RecordInvoice(ctx context.Context, userID uuid.UUID, stripeInvoiceID string, amount int64, currency, status, invoiceURL, invoicePDF string, periodStart, periodEnd int64) error {
+	invoiceID := uuid.New()
+	_, err := s.db.Pool().Exec(ctx, `
+		INSERT INTO invoices (id, user_id, stripe_invoice_id, amount, currency, status, invoice_url, invoice_pdf, period_start, period_end, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, to_timestamp($9), to_timestamp($10), NOW())
+		ON CONFLICT (stripe_invoice_id) DO UPDATE SET status = $6, invoice_url = $7, invoice_pdf = $8
+	`, invoiceID, userID, stripeInvoiceID, amount, currency, status, invoiceURL, invoicePDF, periodStart, periodEnd)
+	return err
+}
+
+// GetUserByStripeCustomerID finds a user by their Stripe customer ID
+func (s *BillingService) GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error) {
+	var user models.User
+	err := s.db.Pool().QueryRow(ctx, `
+		SELECT id, email, name, COALESCE(company, '') FROM users WHERE stripe_customer_id = $1
+	`, stripeCustomerID).Scan(&user.ID, &user.Email, &user.Name, &user.Company)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// GetPlanFromPriceID returns the plan name for a Stripe price ID
+func (s *BillingService) GetPlanFromPriceID(priceID string) string {
+	switch priceID {
+	case s.proPriceID:
+		return "pro"
+	case s.enterprisePriceID:
+		return "enterprise"
+	default:
+		return "unknown"
 	}
 }
