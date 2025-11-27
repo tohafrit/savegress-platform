@@ -61,7 +61,7 @@ export function Calculator() {
   const animatedYearly = useCountUp(yearlySavings, 300)
 
   return (
-    <section className="pt-16 md:pt-[140px] pb-section bg-dark-bg-secondary relative overflow-hidden">
+    <section className="pt-16 md:pt-[140px] pb-section md:pb-[140px] bg-dark-bg-secondary relative overflow-hidden">
       {/* Background image with pulse effect */}
       <motion.img
         src="/images/bg-calculator.png"
@@ -94,7 +94,7 @@ export function Calculator() {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
         >
-          <div className="calculator-card w-full max-w-[624px] mx-auto md:mx-0 h-auto md:h-[670px] p-6 md:p-[40px_72px]">
+          <div className="calculator-card w-full max-w-[624px] mx-auto md:mx-0 p-6 md:p-[40px_72px]">
             <div className="space-y-6">
               {/* Daily volume slider */}
               <div>
@@ -209,7 +209,7 @@ export function Calculator() {
                 </div>
               </div>
 
-              <p className="text-mini-3 text-grey mt-6 w-full max-w-[480px]">
+              <p className="text-mini-3 text-grey mt-6 mb-10 w-full max-w-[480px]">
                 * Egress pricing: {sourceCloud} {REGIONS[region]} at ${pricePerGB}/GB. Actual prices may vary by specific region, volume tier, and commitment. Compression: 5x (JSON) to 150x (time-series).
               </p>
             </div>
