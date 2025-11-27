@@ -15,19 +15,20 @@ import (
 )
 
 var (
-	ErrInvalidCredentials   = errors.New("invalid email or password")
-	ErrUserExists           = errors.New("user with this email already exists")
-	ErrUserNotFound         = errors.New("user not found")
-	ErrInvalidToken         = errors.New("invalid or expired token")
-	ErrResetTokenExpired    = errors.New("password reset token has expired")
-	ErrResetTokenUsed       = errors.New("password reset token has already been used")
+	ErrInvalidCredentials = errors.New("invalid email or password")
+	ErrUserExists         = errors.New("user with this email already exists")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrInvalidToken       = errors.New("invalid or expired token")
+	ErrResetTokenExpired  = errors.New("password reset token has expired")
+	ErrResetTokenUsed     = errors.New("password reset token has already been used")
 )
 
 // AuthService handles authentication
 type AuthService struct {
-	db        *repository.PostgresDB
-	redis     *repository.RedisClient
-	jwtSecret []byte
+	db           *repository.PostgresDB
+	redis        *repository.RedisClient
+	jwtSecret    []byte
+	emailService *EmailService
 }
 
 // NewAuthService creates a new auth service
@@ -37,6 +38,11 @@ func NewAuthService(db *repository.PostgresDB, redis *repository.RedisClient, jw
 		redis:     redis,
 		jwtSecret: []byte(jwtSecret),
 	}
+}
+
+// SetEmailService sets the email service for auth operations
+func (s *AuthService) SetEmailService(emailService *EmailService) {
+	s.emailService = emailService
 }
 
 // TokenPair holds access and refresh tokens
@@ -381,4 +387,40 @@ func (s *AuthService) generateTokenPair(user *models.User) (*TokenPair, error) {
 		RefreshToken: refreshTokenString,
 		ExpiresAt:    accessExpiry,
 	}, nil
+}
+
+// ChangePassword changes password for authenticated user
+func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
+	// Validate new password length
+	if len(newPassword) < 8 {
+		return fmt.Errorf("password must be at least 8 characters")
+	}
+
+	// Get current password hash
+	var passwordHash string
+	err := s.db.Pool().QueryRow(ctx, "SELECT password_hash FROM users WHERE id = $1", userID).Scan(&passwordHash)
+	if err != nil {
+		return ErrUserNotFound
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(currentPassword)); err != nil {
+		return ErrInvalidCredentials
+	}
+
+	// Hash new password
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Update password
+	_, err = s.db.Pool().Exec(ctx, `
+		UPDATE users SET password_hash = $1, updated_at = $2 WHERE id = $3
+	`, string(hash), time.Now().UTC(), userID)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	return nil
 }

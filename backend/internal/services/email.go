@@ -13,10 +13,10 @@ import (
 
 // EmailService handles sending emails
 type EmailService struct {
-	provider     EmailProvider
-	fromAddress  string
-	fromName     string
-	baseURL      string // For constructing links in emails
+	provider    EmailProvider
+	fromAddress string
+	fromName    string
+	baseURL     string // For constructing links in emails
 }
 
 // EmailProvider abstracts different email providers

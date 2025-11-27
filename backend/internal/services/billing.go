@@ -21,18 +21,18 @@ import (
 )
 
 var (
-	ErrNoSubscription     = errors.New("no active subscription")
-	ErrInvalidWebhook     = errors.New("invalid webhook signature")
-	ErrInvalidPlan        = errors.New("invalid plan")
-	ErrSamePlan           = errors.New("already on this plan")
+	ErrNoSubscription        = errors.New("no active subscription")
+	ErrInvalidWebhook        = errors.New("invalid webhook signature")
+	ErrInvalidPlan           = errors.New("invalid plan")
+	ErrSamePlan              = errors.New("already on this plan")
 	ErrPaymentMethodNotFound = errors.New("payment method not found")
 )
 
 // BillingService handles Stripe billing
 type BillingService struct {
-	db              *repository.PostgresDB
-	webhookSecret   string
-	proPriceID      string
+	db                *repository.PostgresDB
+	webhookSecret     string
+	proPriceID        string
 	enterprisePriceID string
 }
 
@@ -349,11 +349,10 @@ func (s *BillingService) SetDefaultPaymentMethod(ctx context.Context, stripeCust
 // CreateSetupIntent creates a SetupIntent for adding a new payment method via Stripe.js
 func (s *BillingService) CreateSetupIntent(ctx context.Context, stripeCustomerID string) (string, error) {
 	params := &stripe.SetupIntentParams{
-		Customer: stripe.String(stripeCustomerID),
+		Customer:           stripe.String(stripeCustomerID),
 		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
 	}
 
-	// Import setupintent package
 	intent, err := setupintent.New(params)
 	if err != nil {
 		return "", fmt.Errorf("failed to create setup intent: %w", err)

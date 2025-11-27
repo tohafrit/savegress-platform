@@ -118,3 +118,17 @@ func (s *UserService) UpdateUserRole(ctx context.Context, userID uuid.UUID, role
 	`, role, time.Now().UTC(), userID)
 	return err
 }
+
+// GetByStripeCustomerID returns a user by Stripe customer ID
+func (s *UserService) GetByStripeCustomerID(ctx context.Context, stripeCustomerID string) (*models.User, error) {
+	var user models.User
+	err := s.db.Pool().QueryRow(ctx, `
+		SELECT id, email, name, COALESCE(company, ''), role, email_verified, COALESCE(stripe_customer_id, ''), created_at, updated_at, last_login_at
+		FROM users WHERE stripe_customer_id = $1
+	`, stripeCustomerID).Scan(&user.ID, &user.Email, &user.Name, &user.Company, &user.Role,
+		&user.EmailVerified, &user.StripeCustomerID, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
+	if err != nil {
+		return nil, ErrUserNotFound
+	}
+	return &user, nil
+}

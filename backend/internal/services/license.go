@@ -409,3 +409,54 @@ func (s *LicenseService) GetAllLicensesPaginated(ctx context.Context, page, limi
 
 	return licenses, total, nil
 }
+
+// CreateLicenseForSubscription creates a license for a new subscription (used by billing webhook)
+func (s *LicenseService) CreateLicenseForSubscription(ctx context.Context, userID uuid.UUID, plan string) (*models.License, error) {
+	// Map plan to tier
+	tier := plan
+	if tier == "" {
+		tier = "pro"
+	}
+
+	// Default validity: 365 days for subscriptions (renewed on payment)
+	validDays := 365
+
+	// No hardware binding for subscription licenses (bound on first activation)
+	return s.CreateLicense(ctx, userID, tier, validDays, "")
+}
+
+// UpdateLicenseTier updates the tier for a user's active license
+func (s *LicenseService) UpdateLicenseTier(ctx context.Context, userID uuid.UUID, newTier string) error {
+	// Get limits and features for new tier
+	lim := s.getLimitsForTier(newTier)
+	features := s.getFeaturesForTier(newTier)
+
+	_, err := s.db.Pool().Exec(ctx, `
+		UPDATE licenses
+		SET tier = $1, max_sources = $2, max_tables = $3, max_throughput = $4, features = $5, updated_at = NOW()
+		WHERE user_id = $6 AND status = 'active'
+	`, newTier, lim.MaxSources, lim.MaxTables, lim.MaxThroughput, features, userID)
+
+	return err
+}
+
+// ExtendLicense extends a user's active license by the specified number of days
+func (s *LicenseService) ExtendLicense(ctx context.Context, userID uuid.UUID, days int) error {
+	_, err := s.db.Pool().Exec(ctx, `
+		UPDATE licenses
+		SET expires_at = expires_at + INTERVAL '1 day' * $1, updated_at = NOW()
+		WHERE user_id = $2 AND status = 'active'
+	`, days, userID)
+
+	return err
+}
+
+// RevokeUserLicenses revokes all active licenses for a user (used when subscription is canceled)
+func (s *LicenseService) RevokeUserLicenses(ctx context.Context, userID uuid.UUID) error {
+	now := time.Now().UTC()
+	_, err := s.db.Pool().Exec(ctx, `
+		UPDATE licenses SET status = 'revoked', revoked_at = $1
+		WHERE user_id = $2 AND status = 'active'
+	`, now, userID)
+	return err
+}

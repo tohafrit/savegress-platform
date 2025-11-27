@@ -111,10 +111,10 @@ func (h *DownloadHandler) GetDownloadURL(w http.ResponseWriter, r *http.Request)
 
 	// Validate platform
 	validPlatforms := map[string]bool{
-		"linux-amd64":  true,
-		"linux-arm64":  true,
-		"darwin-amd64": true,
-		"darwin-arm64": true,
+		"linux-amd64":   true,
+		"linux-arm64":   true,
+		"darwin-amd64":  true,
+		"darwin-arm64":  true,
 		"windows-amd64": true,
 	}
 	if !validPlatforms[platform] {
