@@ -218,6 +218,24 @@ CREATE INDEX idx_telemetry_license ON telemetry(license_id);
 CREATE INDEX idx_telemetry_timestamp ON telemetry(timestamp);
 CREATE INDEX idx_telemetry_pipeline ON telemetry(pipeline_id);
 
+-- License usage (aggregated telemetry for billing/analytics)
+CREATE TABLE license_usage (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    license_id UUID NOT NULL REFERENCES licenses(id) ON DELETE CASCADE,
+    hardware_id VARCHAR(255) NOT NULL,
+    events_total BIGINT NOT NULL DEFAULT 0,
+    bytes_total BIGINT NOT NULL DEFAULT 0,
+    error_count BIGINT NOT NULL DEFAULT 0,
+    avg_latency_ms DOUBLE PRECISION NOT NULL DEFAULT 0,
+    sources_active INTEGER NOT NULL DEFAULT 0,
+    tables_tracked INTEGER NOT NULL DEFAULT 0,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_license_usage_license ON license_usage(license_id);
+CREATE INDEX idx_license_usage_recorded ON license_usage(recorded_at);
+CREATE INDEX idx_license_usage_license_time ON license_usage(license_id, recorded_at);
+
 -- Early access requests
 CREATE TABLE early_access_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

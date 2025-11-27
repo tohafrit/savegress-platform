@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -370,4 +371,175 @@ func (h *LicenseHandler) AdminGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondCreated(w, license)
+}
+
+// ============================================
+// ANALYTICS & STATISTICS ENDPOINTS
+// ============================================
+
+// GetStats returns license statistics (admin only)
+func (h *LicenseHandler) GetStats(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetUserFromContext(r.Context())
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	if claims.Role != "admin" {
+		respondError(w, http.StatusForbidden, "admin access required")
+		return
+	}
+
+	stats, err := h.licenseService.GetLicenseStats(r.Context())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to get stats: "+err.Error())
+		return
+	}
+
+	respondSuccess(w, stats)
+}
+
+// RecordTelemetry records usage telemetry from CDC engines
+func (h *LicenseHandler) RecordTelemetry(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		LicenseID     string  `json:"license_id"`
+		HardwareID    string  `json:"hardware_id"`
+		EventsTotal   int64   `json:"events_total"`
+		BytesTotal    int64   `json:"bytes_total"`
+		ErrorCount    int64   `json:"error_count"`
+		AvgLatencyMs  float64 `json:"avg_latency_ms"`
+		SourcesActive int     `json:"sources_active"`
+		TablesTracked int     `json:"tables_tracked"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	licenseID, err := uuid.Parse(req.LicenseID)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid license ID")
+		return
+	}
+
+	record := services.UsageRecord{
+		LicenseID:     licenseID,
+		HardwareID:    req.HardwareID,
+		EventsTotal:   req.EventsTotal,
+		BytesTotal:    req.BytesTotal,
+		ErrorCount:    req.ErrorCount,
+		AvgLatencyMs:  req.AvgLatencyMs,
+		SourcesActive: req.SourcesActive,
+		TablesTracked: req.TablesTracked,
+		RecordedAt:    time.Now().UTC(),
+	}
+
+	if err := h.licenseService.RecordUsage(r.Context(), record); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to record telemetry")
+		return
+	}
+
+	respondSuccess(w, map[string]string{"status": "recorded"})
+}
+
+// GetUsage returns usage statistics for a license
+func (h *LicenseHandler) GetUsage(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetUserFromContext(r.Context())
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	licenseID, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid license ID")
+		return
+	}
+
+	// Parse days parameter
+	days := 30
+	if daysStr := r.URL.Query().Get("days"); daysStr != "" {
+		if d, err := strconv.Atoi(daysStr); err == nil && d > 0 && d <= 365 {
+			days = d
+		}
+	}
+
+	usage, err := h.licenseService.GetUsageStats(r.Context(), licenseID, days)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to get usage: "+err.Error())
+		return
+	}
+
+	respondSuccess(w, map[string]interface{}{
+		"license_id": licenseID,
+		"days":       days,
+		"usage":      usage,
+	})
+}
+
+// GetFeatures returns the list of features for each tier (public endpoint for pricing page)
+func (h *LicenseHandler) GetFeatures(w http.ResponseWriter, r *http.Request) {
+	features := map[string]interface{}{
+		"community": map[string]interface{}{
+			"databases": []string{"postgresql", "mysql", "mariadb"},
+			"limits": map[string]interface{}{
+				"max_sources":    1,
+				"max_tables":     10,
+				"max_throughput": 1000,
+			},
+			"features": []string{
+				"Basic rate limiting",
+				"Circuit breaker",
+				"Health checks",
+				"Basic metrics",
+			},
+		},
+		"pro": map[string]interface{}{
+			"databases": []string{"postgresql", "mysql", "mariadb", "mongodb", "sqlserver", "cassandra", "dynamodb"},
+			"limits": map[string]interface{}{
+				"max_sources":    10,
+				"max_tables":     100,
+				"max_throughput": 50000,
+			},
+			"features": []string{
+				"All Community features",
+				"Compression (4-10x storage savings)",
+				"Dead Letter Queue",
+				"Schema Evolution",
+				"Prometheus metrics",
+				"Advanced rate limiting",
+				"Backpressure control",
+				"Event replay",
+				"SLA monitoring",
+				"Kafka/gRPC/Webhook outputs",
+			},
+		},
+		"enterprise": map[string]interface{}{
+			"databases": []string{"postgresql", "mysql", "mariadb", "mongodb", "sqlserver", "cassandra", "dynamodb", "oracle"},
+			"limits": map[string]interface{}{
+				"max_sources":    "unlimited",
+				"max_tables":     "unlimited",
+				"max_throughput": "unlimited",
+			},
+			"features": []string{
+				"All Pro features",
+				"SIMD-optimized compression",
+				"Exactly-once delivery",
+				"Point-in-Time Recovery",
+				"Cloud storage (S3/GCS/Azure)",
+				"OpenTelemetry tracing",
+				"High Availability",
+				"Raft clustering",
+				"Multi-region deployment",
+				"Mutual TLS (mTLS)",
+				"Role-based access control",
+				"HashiCorp Vault integration",
+				"Audit logging",
+				"SSO/LDAP integration",
+				"Multi-tenant isolation",
+			},
+		},
+	}
+
+	respondSuccess(w, features)
 }

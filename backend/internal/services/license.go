@@ -351,9 +351,47 @@ func (s *LicenseService) getLimitsForTier(tier string) limits {
 }
 
 func (s *LicenseService) getFeaturesForTier(tier string) []string {
-	community := []string{"postgresql", "mysql", "mariadb"}
-	pro := append(community, "mongodb", "sqlserver", "cassandra", "dynamodb", "snapshot", "kafka_output", "grpc_output")
-	enterprise := append(pro, "oracle", "ha", "raft_cluster", "sso", "ldap", "audit_log")
+	// Community features - core databases only
+	community := []string{
+		"postgresql", "mysql", "mariadb",
+	}
+
+	// Pro features - adds scale, performance, and DevOps tooling
+	pro := append(community,
+		// Additional databases
+		"mongodb", "sqlserver", "cassandra", "dynamodb",
+		// Output connectors
+		"snapshot", "kafka_output", "grpc_output", "webhook",
+		// Performance
+		"compression",
+		// Reliability
+		"advanced_rate_limiting", "backpressure", "dlq", "replay",
+		// Schema management
+		"schema_evolution",
+		// Observability
+		"prometheus", "sla_monitoring",
+	)
+
+	// Enterprise features - adds compliance, security, and HA
+	enterprise := append(pro,
+		// Premium database
+		"oracle",
+		// Custom integrations
+		"custom_output",
+		// Maximum performance
+		"compression_simd", "exactly_once",
+		// Disaster recovery
+		"pitr", "cloud_storage",
+		// Advanced schema governance
+		"schema_migration_approval",
+		// Full observability
+		"opentelemetry",
+		// High availability & clustering
+		"ha", "raft_cluster", "multi_region",
+		// Security & compliance
+		"encryption", "mtls", "rbac", "vault",
+		"audit_log", "sso", "ldap", "multi_tenant",
+	)
 
 	switch tier {
 	case "enterprise":
@@ -492,4 +530,224 @@ func (s *LicenseService) RevokeUserLicenses(ctx context.Context, userID uuid.UUI
 		WHERE user_id = $2 AND status = 'active'
 	`, now, userID)
 	return err
+}
+
+// ============================================
+// ANALYTICS & STATISTICS
+// ============================================
+
+// LicenseStats contains license statistics for dashboards
+type LicenseStats struct {
+	TotalLicenses     int            `json:"total_licenses"`
+	ActiveLicenses    int            `json:"active_licenses"`
+	ExpiredLicenses   int            `json:"expired_licenses"`
+	RevokedLicenses   int            `json:"revoked_licenses"`
+	ExpiringIn30Days  int            `json:"expiring_in_30_days"`
+	LicensesByTier    map[string]int `json:"licenses_by_tier"`
+	ActiveActivations int            `json:"active_activations"`
+	RevenueMetrics    RevenueMetrics `json:"revenue_metrics"`
+}
+
+// RevenueMetrics contains revenue-related statistics
+type RevenueMetrics struct {
+	ProLicenses        int `json:"pro_licenses"`
+	EnterpriseLicenses int `json:"enterprise_licenses"`
+	TrialLicenses      int `json:"trial_licenses"`
+	ConversionRate     float64 `json:"conversion_rate"` // Trial -> Paid
+}
+
+// GetLicenseStats returns comprehensive license statistics (admin only)
+func (s *LicenseService) GetLicenseStats(ctx context.Context) (*LicenseStats, error) {
+	stats := &LicenseStats{
+		LicensesByTier: make(map[string]int),
+	}
+
+	// Total licenses
+	err := s.db.Pool().QueryRow(ctx, `SELECT COUNT(*) FROM licenses`).Scan(&stats.TotalLicenses)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count total licenses: %w", err)
+	}
+
+	// Active licenses
+	err = s.db.Pool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM licenses
+		WHERE status = 'active' AND expires_at > NOW()
+	`).Scan(&stats.ActiveLicenses)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count active licenses: %w", err)
+	}
+
+	// Expired licenses
+	err = s.db.Pool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM licenses
+		WHERE expires_at <= NOW() AND status != 'revoked'
+	`).Scan(&stats.ExpiredLicenses)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count expired licenses: %w", err)
+	}
+
+	// Revoked licenses
+	err = s.db.Pool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM licenses WHERE status = 'revoked'
+	`).Scan(&stats.RevokedLicenses)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count revoked licenses: %w", err)
+	}
+
+	// Expiring in 30 days
+	err = s.db.Pool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM licenses
+		WHERE status = 'active'
+		AND expires_at > NOW()
+		AND expires_at <= NOW() + INTERVAL '30 days'
+	`).Scan(&stats.ExpiringIn30Days)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count expiring licenses: %w", err)
+	}
+
+	// Licenses by tier
+	rows, err := s.db.Pool().Query(ctx, `
+		SELECT tier, COUNT(*) FROM licenses
+		WHERE status = 'active' AND expires_at > NOW()
+		GROUP BY tier
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get licenses by tier: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var tier string
+		var count int
+		if err := rows.Scan(&tier, &count); err != nil {
+			return nil, err
+		}
+		stats.LicensesByTier[tier] = count
+	}
+
+	// Active activations
+	err = s.db.Pool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM license_activations WHERE deactivated_at IS NULL
+	`).Scan(&stats.ActiveActivations)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count active activations: %w", err)
+	}
+
+	// Revenue metrics
+	stats.RevenueMetrics.ProLicenses = stats.LicensesByTier["pro"]
+	stats.RevenueMetrics.EnterpriseLicenses = stats.LicensesByTier["enterprise"]
+	stats.RevenueMetrics.TrialLicenses = stats.LicensesByTier["trial"]
+
+	// Conversion rate (trials that converted to pro/enterprise)
+	var totalTrials, convertedTrials int
+	err = s.db.Pool().QueryRow(ctx, `
+		SELECT COUNT(*) FROM licenses WHERE tier = 'trial'
+	`).Scan(&totalTrials)
+	if err == nil && totalTrials > 0 {
+		// Count users who had trial and now have pro/enterprise
+		err = s.db.Pool().QueryRow(ctx, `
+			SELECT COUNT(DISTINCT l1.user_id) FROM licenses l1
+			WHERE l1.tier = 'trial'
+			AND EXISTS (
+				SELECT 1 FROM licenses l2
+				WHERE l2.user_id = l1.user_id
+				AND l2.tier IN ('pro', 'enterprise')
+				AND l2.issued_at > l1.issued_at
+			)
+		`).Scan(&convertedTrials)
+		if err == nil {
+			stats.RevenueMetrics.ConversionRate = float64(convertedTrials) / float64(totalTrials) * 100
+		}
+	}
+
+	return stats, nil
+}
+
+// UsageRecord represents usage data from an engine
+type UsageRecord struct {
+	LicenseID     uuid.UUID `json:"license_id"`
+	HardwareID    string    `json:"hardware_id"`
+	EventsTotal   int64     `json:"events_total"`
+	BytesTotal    int64     `json:"bytes_total"`
+	ErrorCount    int64     `json:"error_count"`
+	AvgLatencyMs  float64   `json:"avg_latency_ms"`
+	SourcesActive int       `json:"sources_active"`
+	TablesTracked int       `json:"tables_tracked"`
+	RecordedAt    time.Time `json:"recorded_at"`
+}
+
+// RecordUsage stores usage telemetry from CDC engines
+func (s *LicenseService) RecordUsage(ctx context.Context, record UsageRecord) error {
+	_, err := s.db.Pool().Exec(ctx, `
+		INSERT INTO license_usage (
+			license_id, hardware_id, events_total, bytes_total,
+			error_count, avg_latency_ms, sources_active, tables_tracked, recorded_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`, record.LicenseID, record.HardwareID, record.EventsTotal, record.BytesTotal,
+		record.ErrorCount, record.AvgLatencyMs, record.SourcesActive, record.TablesTracked, record.RecordedAt)
+	return err
+}
+
+// GetUsageStats returns usage statistics for a license
+func (s *LicenseService) GetUsageStats(ctx context.Context, licenseID uuid.UUID, days int) ([]UsageRecord, error) {
+	if days == 0 {
+		days = 30
+	}
+
+	rows, err := s.db.Pool().Query(ctx, `
+		SELECT license_id, hardware_id, events_total, bytes_total,
+			   error_count, avg_latency_ms, sources_active, tables_tracked, recorded_at
+		FROM license_usage
+		WHERE license_id = $1 AND recorded_at > NOW() - INTERVAL '1 day' * $2
+		ORDER BY recorded_at DESC
+	`, licenseID, days)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	records := make([]UsageRecord, 0)
+	for rows.Next() {
+		var r UsageRecord
+		err := rows.Scan(&r.LicenseID, &r.HardwareID, &r.EventsTotal, &r.BytesTotal,
+			&r.ErrorCount, &r.AvgLatencyMs, &r.SourcesActive, &r.TablesTracked, &r.RecordedAt)
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, r)
+	}
+	return records, nil
+}
+
+// GetAggregatedUsage returns aggregated usage for billing/reporting
+func (s *LicenseService) GetAggregatedUsage(ctx context.Context, licenseID uuid.UUID, startDate, endDate time.Time) (map[string]interface{}, error) {
+	var totalEvents, totalBytes, totalErrors int64
+	var avgLatency float64
+	var maxSources, maxTables int
+
+	err := s.db.Pool().QueryRow(ctx, `
+		SELECT
+			COALESCE(SUM(events_total), 0),
+			COALESCE(SUM(bytes_total), 0),
+			COALESCE(SUM(error_count), 0),
+			COALESCE(AVG(avg_latency_ms), 0),
+			COALESCE(MAX(sources_active), 0),
+			COALESCE(MAX(tables_tracked), 0)
+		FROM license_usage
+		WHERE license_id = $1 AND recorded_at BETWEEN $2 AND $3
+	`, licenseID, startDate, endDate).Scan(&totalEvents, &totalBytes, &totalErrors, &avgLatency, &maxSources, &maxTables)
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"total_events":      totalEvents,
+		"total_bytes":       totalBytes,
+		"total_errors":      totalErrors,
+		"avg_latency_ms":    avgLatency,
+		"max_sources_used":  maxSources,
+		"max_tables_tracked": maxTables,
+		"period_start":      startDate,
+		"period_end":        endDate,
+	}, nil
 }
