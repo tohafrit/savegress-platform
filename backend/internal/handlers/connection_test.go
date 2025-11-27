@@ -19,7 +19,7 @@ import (
 
 // MockConnectionService implements a mock for testing
 type MockConnectionService struct {
-	ListConnectionsFunc      func(ctx context.Context, userID uuid.UUID) ([]*models.Connection, error)
+	ListConnectionsFunc      func(ctx context.Context, userID uuid.UUID) ([]models.Connection, error)
 	CreateConnectionFunc     func(ctx context.Context, userID uuid.UUID, conn *models.Connection) (*models.Connection, error)
 	GetConnectionFunc        func(ctx context.Context, userID uuid.UUID, connID uuid.UUID) (*models.Connection, error)
 	UpdateConnectionFunc     func(ctx context.Context, userID uuid.UUID, connID uuid.UUID, updates map[string]interface{}) (*models.Connection, error)
@@ -28,7 +28,7 @@ type MockConnectionService struct {
 	TestConnectionDirectFunc func(ctx context.Context, connType, host string, port int, database, username, password, sslMode string) error
 }
 
-func (m *MockConnectionService) ListConnections(ctx context.Context, userID uuid.UUID) ([]*models.Connection, error) {
+func (m *MockConnectionService) ListConnections(ctx context.Context, userID uuid.UUID) ([]models.Connection, error) {
 	if m.ListConnectionsFunc != nil {
 		return m.ListConnectionsFunc(ctx, userID)
 	}
@@ -365,15 +365,15 @@ func TestConnectionHandler_List(t *testing.T) {
 	tests := []struct {
 		name               string
 		hasUser            bool
-		mockListConnections func(ctx context.Context, userID uuid.UUID) ([]*models.Connection, error)
+		mockListConnections func(ctx context.Context, userID uuid.UUID) ([]models.Connection, error)
 		expectedStatus     int
 		expectedError      string
 	}{
 		{
 			name:    "successful list",
 			hasUser: true,
-			mockListConnections: func(ctx context.Context, userID uuid.UUID) ([]*models.Connection, error) {
-				return []*models.Connection{
+			mockListConnections: func(ctx context.Context, userID uuid.UUID) ([]models.Connection, error) {
+				return []models.Connection{
 					{
 						ID:       uuid.New(),
 						UserID:   userID,
@@ -399,8 +399,8 @@ func TestConnectionHandler_List(t *testing.T) {
 		{
 			name:    "empty list",
 			hasUser: true,
-			mockListConnections: func(ctx context.Context, userID uuid.UUID) ([]*models.Connection, error) {
-				return []*models.Connection{}, nil
+			mockListConnections: func(ctx context.Context, userID uuid.UUID) ([]models.Connection, error) {
+				return []models.Connection{}, nil
 			},
 			expectedStatus: http.StatusOK,
 		},
@@ -413,7 +413,7 @@ func TestConnectionHandler_List(t *testing.T) {
 		{
 			name:    "service error",
 			hasUser: true,
-			mockListConnections: func(ctx context.Context, userID uuid.UUID) ([]*models.Connection, error) {
+			mockListConnections: func(ctx context.Context, userID uuid.UUID) ([]models.Connection, error) {
 				return nil, errors.New("database error")
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -1189,7 +1189,7 @@ func TestConnectionHandler_InvalidJSON(t *testing.T) {
 	for _, ep := range endpoints {
 		t.Run(ep.name+" invalid JSON", func(t *testing.T) {
 			mock := &MockConnectionService{}
-			handler := newTestConnectionHandler(mock)
+			handler := NewConnectionHandlerWithInterface(mock)
 
 			var req *http.Request
 			if ep.hasUser {
@@ -1257,7 +1257,7 @@ func TestConnectionHandler_GetUserUUIDError(t *testing.T) {
 	for _, ep := range endpoints {
 		t.Run(ep.name, func(t *testing.T) {
 			mock := &MockConnectionService{}
-			handler := newTestConnectionHandler(mock)
+			handler := NewConnectionHandlerWithInterface(mock)
 
 			req := httptest.NewRequest(ep.method, ep.url, bytes.NewReader(ep.body))
 			req.Header.Set("Content-Type", "application/json")

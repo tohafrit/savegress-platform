@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,17 +12,41 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/savegress/platform/backend/internal/middleware"
+	"github.com/savegress/platform/backend/internal/models"
 	"github.com/savegress/platform/backend/internal/services"
 )
 
+// LicenseServiceInterface defines the interface for license service operations
+type LicenseServiceInterface interface {
+	ValidateLicense(ctx context.Context, licenseID string, hardwareID string) (*models.License, error)
+	ActivateLicense(ctx context.Context, licenseID uuid.UUID, hardwareID, hostname, platform, version, ipAddress string) (*models.LicenseActivation, error)
+	DeactivateLicense(ctx context.Context, licenseID uuid.UUID, hardwareID string) error
+	GetUserLicenses(ctx context.Context, userID uuid.UUID) ([]models.License, error)
+	CreateLicense(ctx context.Context, userID uuid.UUID, tier string, validDays int, hardwareID string) (*models.License, error)
+	RevokeLicense(ctx context.Context, licenseID uuid.UUID) error
+	GetLicenseActivations(ctx context.Context, licenseID uuid.UUID) ([]models.LicenseActivation, error)
+	GetAllLicensesPaginated(ctx context.Context, page, limit int, tier, status string) ([]models.License, int, error)
+	GetLicenseStats(ctx context.Context) (*services.LicenseStats, error)
+	RecordUsage(ctx context.Context, record services.UsageRecord) error
+	GetUsageStats(ctx context.Context, licenseID uuid.UUID, days int) ([]services.UsageRecord, error)
+}
+
 // LicenseHandler handles license endpoints
 type LicenseHandler struct {
-	licenseService *services.LicenseService
+	licenseService LicenseServiceInterface
 	authService    *services.AuthService
 }
 
 // NewLicenseHandler creates a new license handler
 func NewLicenseHandler(licenseService *services.LicenseService, authService *services.AuthService) *LicenseHandler {
+	return &LicenseHandler{
+		licenseService: licenseService,
+		authService:    authService,
+	}
+}
+
+// NewLicenseHandlerWithInterface creates a new license handler with interface (for testing)
+func NewLicenseHandlerWithInterface(licenseService LicenseServiceInterface, authService *services.AuthService) *LicenseHandler {
 	return &LicenseHandler{
 		licenseService: licenseService,
 		authService:    authService,

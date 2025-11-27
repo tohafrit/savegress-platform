@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
 	"github.com/savegress/platform/backend/internal/services"
@@ -606,10 +607,10 @@ func TestEarlyAccessHandler_OptionalFields(t *testing.T) {
 }
 
 func TestEarlyAccessHandler_ConcurrentSubmissions(t *testing.T) {
-	submissionCount := 0
+	var submissionCount int64
 	mock := &MockEarlyAccessService{
 		SubmitFunc: func(ctx context.Context, input services.EarlyAccessInput) error {
-			submissionCount++
+			atomic.AddInt64(&submissionCount, 1)
 			return nil
 		},
 	}
@@ -647,7 +648,8 @@ func TestEarlyAccessHandler_ConcurrentSubmissions(t *testing.T) {
 		<-done
 	}
 
-	if submissionCount != numRequests {
-		t.Errorf("expected %d submissions, got %d", numRequests, submissionCount)
+	finalCount := atomic.LoadInt64(&submissionCount)
+	if finalCount != int64(numRequests) {
+		t.Errorf("expected %d submissions, got %d", numRequests, finalCount)
 	}
 }

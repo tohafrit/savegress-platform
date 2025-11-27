@@ -214,13 +214,14 @@ func TestListDownloads(t *testing.T) {
 }
 
 func TestGetDownloadURL(t *testing.T) {
+	// This is now a legacy endpoint that returns an error directing users to the new endpoint
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/downloads/url", nil)
 	rec := httptest.NewRecorder()
 
 	GetDownloadURL(rec, req)
 
-	if rec.Code != http.StatusOK {
-		t.Errorf("expected status %d, got %d", http.StatusOK, rec.Code)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
 	}
 
 	var response map[string]string
@@ -228,11 +229,7 @@ func TestGetDownloadURL(t *testing.T) {
 		t.Fatalf("failed to decode response: %v", err)
 	}
 
-	if response["url"] == "" {
-		t.Error("expected non-empty url")
-	}
-
-	if response["expires_in"] == "" {
-		t.Error("expected non-empty expires_in")
+	if response["error"] == "" {
+		t.Error("expected non-empty error message")
 	}
 }

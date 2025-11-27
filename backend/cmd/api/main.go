@@ -42,6 +42,22 @@ func main() {
 	}
 	defer redis.Close()
 
+	// Initialize email service
+	emailService, err := services.NewEmailService(services.EmailConfig{
+		Provider:       cfg.EmailProvider,
+		FromAddress:    cfg.SMTPFrom,
+		FromName:       "Savegress",
+		BaseURL:        cfg.BaseURL,
+		SMTPHost:       cfg.SMTPHost,
+		SMTPPort:       cfg.SMTPPort,
+		SMTPUser:       cfg.SMTPUser,
+		SMTPPassword:   cfg.SMTPPassword,
+		ResendAPIKey:   cfg.ResendAPIKey,
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize email service: %v", err)
+	}
+
 	// Initialize services
 	authService := services.NewAuthService(db, redis, cfg.JWTSecret)
 	licenseService := services.NewLicenseService(db, cfg.LicensePrivateKey)
@@ -55,9 +71,9 @@ func main() {
 	configService := services.NewConfigGeneratorService(connectionService, pipelineService)
 
 	// Initialize handlers
-	authHandler := handlers.NewAuthHandler(authService)
+	authHandler := handlers.NewAuthHandler(authService, emailService)
 	licenseHandler := handlers.NewLicenseHandler(licenseService, authService)
-	billingHandler := handlers.NewBillingHandler(billingService, licenseService, userService)
+	billingHandler := handlers.NewBillingHandler(billingService, licenseService, userService, emailService)
 	userHandler := handlers.NewUserHandler(userService)
 	telemetryHandler := handlers.NewTelemetryHandler(telemetryService, licenseService)
 	healthHandler := handlers.NewHealthHandler(db, redis)

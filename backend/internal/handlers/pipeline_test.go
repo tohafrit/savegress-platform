@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -200,9 +202,9 @@ func (h *testPipelineHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Check pipeline limit based on user's license
 	licenses, err := h.mockLicense.GetUserLicenses(r.Context(), userID)
-	if err == nil && len(licenses) > 0 {
+	if err == nil {
 		// Find best active license
-		var maxPipelines int = 1 // community default
+		var maxPipelines int = 1 // community default (no license or empty list)
 		for _, lic := range licenses {
 			if lic.Status == "active" {
 				switch lic.Tier {

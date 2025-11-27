@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -12,13 +13,29 @@ import (
 	"github.com/savegress/platform/backend/internal/services"
 )
 
+// ConnectionServiceInterface defines the interface for connection service operations
+type ConnectionServiceInterface interface {
+	ListConnections(ctx context.Context, userID uuid.UUID) ([]models.Connection, error)
+	CreateConnection(ctx context.Context, userID uuid.UUID, conn *models.Connection) (*models.Connection, error)
+	GetConnection(ctx context.Context, userID uuid.UUID, connID uuid.UUID) (*models.Connection, error)
+	UpdateConnection(ctx context.Context, userID uuid.UUID, connID uuid.UUID, updates map[string]interface{}) (*models.Connection, error)
+	DeleteConnection(ctx context.Context, userID uuid.UUID, connID uuid.UUID) error
+	TestConnection(ctx context.Context, userID uuid.UUID, connID uuid.UUID) error
+	TestConnectionDirect(ctx context.Context, connType, host string, port int, database, username, password, sslMode string) error
+}
+
 // ConnectionHandler handles connection endpoints
 type ConnectionHandler struct {
-	connectionService *services.ConnectionService
+	connectionService ConnectionServiceInterface
 }
 
 // NewConnectionHandler creates a new connection handler
 func NewConnectionHandler(connectionService *services.ConnectionService) *ConnectionHandler {
+	return &ConnectionHandler{connectionService: connectionService}
+}
+
+// NewConnectionHandlerWithInterface creates a new connection handler with interface (for testing)
+func NewConnectionHandlerWithInterface(connectionService ConnectionServiceInterface) *ConnectionHandler {
 	return &ConnectionHandler{connectionService: connectionService}
 }
 

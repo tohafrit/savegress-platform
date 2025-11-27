@@ -86,6 +86,18 @@ func (m *MockLicenseServiceForHandler) GetAllLicensesPaginated(ctx context.Conte
 	return nil, 0, nil
 }
 
+func (m *MockLicenseServiceForHandler) GetLicenseStats(ctx context.Context) (*services.LicenseStats, error) {
+	return nil, nil
+}
+
+func (m *MockLicenseServiceForHandler) RecordUsage(ctx context.Context, record services.UsageRecord) error {
+	return nil
+}
+
+func (m *MockLicenseServiceForHandler) GetUsageStats(ctx context.Context, licenseID uuid.UUID, days int) ([]services.UsageRecord, error) {
+	return nil, nil
+}
+
 // Helper to create context with user claims
 func contextWithUser(userID uuid.UUID, role string) context.Context {
 	claims := &services.Claims{
@@ -195,7 +207,7 @@ func TestLicenseHandler_Validate(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				ValidateLicenseFunc: tt.mockValidate,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			var body []byte
 			if tt.requestBody != nil {
@@ -315,7 +327,7 @@ func TestLicenseHandler_Activate(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				ActivateLicenseFunc: tt.mockActivate,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			var body []byte
 			if tt.requestBody != nil {
@@ -400,7 +412,7 @@ func TestLicenseHandler_Deactivate(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				DeactivateLicenseFunc: tt.mockDeactivate,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			var body []byte
 			if tt.requestBody != nil {
@@ -483,7 +495,7 @@ func TestLicenseHandler_List(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				GetUserLicensesFunc: tt.mockGetLicenses,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/licenses", nil)
 			req = req.WithContext(tt.setupContext())
@@ -596,7 +608,7 @@ func TestLicenseHandler_Get(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				ValidateLicenseFunc: tt.mockValidate,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/licenses/"+tt.licenseID, nil)
 			req = req.WithContext(tt.setupContext())
@@ -718,7 +730,7 @@ func TestLicenseHandler_Create(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				CreateLicenseFunc: tt.mockCreate,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			var body []byte
 			if tt.requestBody != nil {
@@ -876,7 +888,7 @@ func TestLicenseHandler_Revoke(t *testing.T) {
 				ValidateLicenseFunc: tt.mockValidate,
 				RevokeLicenseFunc:   tt.mockRevoke,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/licenses/"+tt.licenseID+"/revoke", nil)
 			req = req.WithContext(tt.setupContext())
@@ -972,7 +984,7 @@ func TestLicenseHandler_GetActivations(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				GetLicenseActivationsFunc: tt.mockGetActivations,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/licenses/"+tt.licenseID+"/activations", nil)
 			req = req.WithContext(tt.setupContext())
@@ -1101,7 +1113,7 @@ func TestLicenseHandler_ListAll(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				GetAllLicensesPaginatedFunc: tt.mockGetAllPaginated,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			url := "/api/v1/admin/licenses"
 			if len(tt.queryParams) > 0 {
@@ -1218,7 +1230,7 @@ func TestLicenseHandler_AdminGenerate(t *testing.T) {
 			mock := &MockLicenseServiceForHandler{
 				CreateLicenseFunc: tt.mockCreate,
 			}
-			handler := NewLicenseHandler(mock, nil)
+			handler := NewLicenseHandlerWithInterface(mock, nil)
 
 			var body []byte
 			if tt.requestBody != nil {
@@ -1249,8 +1261,8 @@ func TestLicenseHandler_AdminGenerate(t *testing.T) {
 }
 
 func TestLicenseHandler_InvalidJSON(t *testing.T) {
-	mock := &MockLicenseService{}
-	handler := NewLicenseHandler(mock, nil)
+	mock := &MockLicenseServiceForHandler{}
+	handler := NewLicenseHandlerWithInterface(mock, nil)
 
 	endpoints := []struct {
 		name    string

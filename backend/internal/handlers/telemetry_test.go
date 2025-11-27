@@ -415,16 +415,10 @@ func TestTelemetryHandler_GetStats(t *testing.T) {
 			}
 
 			if tt.expectedStatus == http.StatusOK && tt.mockGetDashboardStats != nil {
-				var response struct {
-					Success bool                    `json:"success"`
-					Data    services.DashboardStats `json:"data"`
-				}
+				var response services.DashboardStats
 				json.NewDecoder(rec.Body).Decode(&response)
-				if !response.Success {
-					t.Error("expected success to be true")
-				}
-				if response.Data.TotalEventsProcessed != 10000 {
-					t.Errorf("expected total events processed to be 10000, got %d", response.Data.TotalEventsProcessed)
+				if response.TotalEventsProcessed != 10000 {
+					t.Errorf("expected total events processed to be 10000, got %d", response.TotalEventsProcessed)
 				}
 			}
 		})
@@ -549,15 +543,10 @@ func TestTelemetryHandler_GetUsage(t *testing.T) {
 
 			if tt.expectedStatus == http.StatusOK && tt.mockGetUsageHistory != nil {
 				var response struct {
-					Success bool `json:"success"`
-					Data    struct {
-						Usage []services.UsageDataPoint `json:"usage"`
-					} `json:"data"`
+					Usage []services.UsageDataPoint `json:"usage"`
 				}
 				json.NewDecoder(rec.Body).Decode(&response)
-				if !response.Success {
-					t.Error("expected success to be true")
-				}
+				// Response contains usage data directly
 			}
 		})
 	}
@@ -663,15 +652,10 @@ func TestTelemetryHandler_GetInstances(t *testing.T) {
 
 			if tt.expectedStatus == http.StatusOK && tt.mockGetActiveInstances != nil {
 				var response struct {
-					Success bool `json:"success"`
-					Data    struct {
-						Instances []services.Instance `json:"instances"`
-					} `json:"data"`
+					Instances []services.Instance `json:"instances"`
 				}
 				json.NewDecoder(rec.Body).Decode(&response)
-				if !response.Success {
-					t.Error("expected success to be true")
-				}
+				// Response contains instances data directly
 			}
 		})
 	}

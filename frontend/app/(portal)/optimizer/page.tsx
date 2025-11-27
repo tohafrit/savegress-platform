@@ -2,6 +2,13 @@
 
 import { useState, useMemo } from 'react';
 import {
+  PageHeader,
+  InfoBanner,
+  HelpIcon,
+  ExpandableSection,
+  QuickGuide,
+} from '@/components/ui/helpers';
+import {
   Zap,
   Server,
   Database,
@@ -17,6 +24,12 @@ import {
   Gauge,
   HardDrive,
   Lock,
+  Lightbulb,
+  Info,
+  BookOpen,
+  HelpCircle,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 
 // Types
@@ -47,8 +60,8 @@ interface GeneratedConfig {
 // Step definitions
 const STEPS = [
   { id: 'workload', title: 'Workload Type', description: 'What is your primary use case?' },
-  { id: 'details', title: 'Requirements', description: 'Specific requirements for your workload' },
-  { id: 'result', title: 'Configuration', description: 'Your optimized configuration' },
+  { id: 'details', title: 'Requirements', description: 'Fine-tune your needs' },
+  { id: 'result', title: 'Configuration', description: 'Your optimized config' },
 ];
 
 export default function OptimizerPage() {
@@ -129,13 +142,26 @@ export default function OptimizerPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-h4 text-white">Configuration Optimizer</h1>
-        <p className="text-content-1 text-grey">
-          Answer a few questions to get an optimized configuration for your use case
-        </p>
-      </div>
+      {/* Header with detailed explanation */}
+      <PageHeader
+        title="Configuration Optimizer"
+        description="Not sure how to configure Savegress for your use case? This wizard analyzes your requirements and generates an optimized configuration file with all the right settings."
+        tip="Answer a few simple questions and we'll create a production-ready config for you!"
+      />
+
+      {/* Intro banner for first-time users */}
+      {currentStep === 0 && (
+        <InfoBanner type="info" title="How the Optimizer works" dismissible>
+          <div className="space-y-2">
+            <p>The optimizer asks about your workload type, performance requirements, and data volume to generate a configuration tailored to your needs.</p>
+            <ul className="list-disc list-inside text-sm space-y-1 mt-2">
+              <li><strong>Step 1:</strong> Choose your primary use case (real-time, streaming, etc.)</li>
+              <li><strong>Step 2:</strong> Specify detailed requirements (latency, delivery guarantees)</li>
+              <li><strong>Step 3:</strong> Get your optimized YAML configuration</li>
+            </ul>
+          </div>
+        </InfoBanner>
+      )}
 
       {/* Progress */}
       <div className="card-dark p-4">
@@ -144,15 +170,15 @@ export default function OptimizerPage() {
             <div key={step.id} className="flex items-center flex-1">
               <div className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                     index < currentStep
                       ? 'bg-accent-cyan text-white'
                       : index === currentStep
                       ? 'bg-gradient-btn-primary text-white'
-                      : 'bg-primary-dark text-grey'
+                      : 'bg-primary-dark text-grey border border-cyan-40/30'
                   }`}
                 >
-                  {index < currentStep ? <Check className="w-4 h-4" /> : index + 1}
+                  {index < currentStep ? <Check className="w-5 h-5" /> : index + 1}
                 </div>
                 <div className="ml-3 hidden sm:block">
                   <p className={`text-sm font-medium ${index <= currentStep ? 'text-white' : 'text-grey'}`}>
@@ -162,7 +188,7 @@ export default function OptimizerPage() {
                 </div>
               </div>
               {index < STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-4 ${index < currentStep ? 'bg-accent-cyan' : 'bg-primary-dark'}`} />
+                <div className={`flex-1 h-0.5 mx-4 transition-colors ${index < currentStep ? 'bg-accent-cyan' : 'bg-primary-dark'}`} />
               )}
             </div>
           ))}
@@ -227,8 +253,17 @@ export default function OptimizerPage() {
                 : 'bg-primary-dark text-grey cursor-not-allowed'
             }`}
           >
-            {currentStep === 1 ? 'Generate Config' : 'Next'}
-            <ChevronRight className="w-4 h-4" />
+            {currentStep === 1 ? (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Generate Config
+              </>
+            ) : (
+              <>
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         )}
       </div>
@@ -248,36 +283,46 @@ function WorkloadStep({
     {
       id: 'realtime' as WorkloadType,
       title: 'Real-time Analytics',
-      description: 'Dashboard updates, live metrics, instant notifications',
+      description: 'For dashboards that update instantly, live monitoring, and immediate notifications. Every change appears within milliseconds.',
       icon: Zap,
       examples: ['Live dashboards', 'Monitoring alerts', 'User activity tracking'],
+      tip: 'Choose this if you need sub-second updates',
     },
     {
       id: 'streaming' as WorkloadType,
       title: 'Event Streaming',
-      description: 'Event-driven architecture, microservices communication',
+      description: 'For microservices that need to react to database changes, event-driven architectures, and async processing.',
       icon: Server,
       examples: ['Order processing', 'Inventory sync', 'Event sourcing'],
+      tip: 'Ideal for event-driven microservices',
     },
     {
       id: 'replication' as WorkloadType,
       title: 'Data Replication',
-      description: 'Database sync, disaster recovery, maintaining consistency',
+      description: 'For maintaining database copies, disaster recovery setups, or keeping data warehouses in sync with production.',
       icon: Database,
       examples: ['DR setup', 'Read replicas', 'Data warehouse loading'],
+      tip: 'Best for database synchronization',
     },
     {
       id: 'batch' as WorkloadType,
       title: 'Batch Processing',
-      description: 'ETL pipelines, periodic sync, bulk operations',
+      description: 'For nightly ETL jobs, periodic data exports, or when real-time isn\'t necessary and you want to optimize for throughput.',
       icon: Clock,
       examples: ['Nightly ETL', 'Report generation', 'Periodic backups'],
+      tip: 'Most cost-effective for non-urgent data',
     },
   ];
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-h5 text-white mb-6">What type of workload are you optimizing for?</h2>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h2 className="text-h5 text-white">What type of workload are you optimizing for?</h2>
+        <p className="text-sm text-grey">
+          Select the option that best describes your primary use case. This determines which settings matter most for your configuration.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {workloads.map((workload) => (
           <button
@@ -306,11 +351,39 @@ function WorkloadStep({
                     </span>
                   ))}
                 </div>
+                <p className="text-xs text-accent-cyan mt-3 flex items-center gap-1">
+                  <Lightbulb className="w-3 h-3" />
+                  {workload.tip}
+                </p>
               </div>
             </div>
           </button>
         ))}
       </div>
+
+      <ExpandableSection title="Not sure which to choose?" icon={HelpCircle}>
+        <div className="space-y-4 text-sm text-grey">
+          <p>Here&apos;s a quick decision guide:</p>
+          <ul className="space-y-2">
+            <li className="flex items-start gap-2">
+              <ArrowRight className="w-4 h-4 text-accent-cyan flex-shrink-0 mt-0.5" />
+              <span><strong className="text-white">Real-time Analytics</strong>: You need data to appear in dashboards or trigger alerts within milliseconds of the change.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <ArrowRight className="w-4 h-4 text-accent-cyan flex-shrink-0 mt-0.5" />
+              <span><strong className="text-white">Event Streaming</strong>: Your services communicate via events and you care about delivery guarantees (at-least-once, exactly-once).</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <ArrowRight className="w-4 h-4 text-accent-cyan flex-shrink-0 mt-0.5" />
+              <span><strong className="text-white">Data Replication</strong>: You&apos;re syncing databases together (e.g., to a read replica or data warehouse) and care about consistency.</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <ArrowRight className="w-4 h-4 text-accent-cyan flex-shrink-0 mt-0.5" />
+              <span><strong className="text-white">Batch Processing</strong>: Real-time isn&apos;t required. You&apos;re running ETL jobs on a schedule and want maximum throughput.</span>
+            </li>
+          </ul>
+        </div>
+      </ExpandableSection>
     </div>
   );
 }
@@ -328,35 +401,50 @@ function DetailsStep({
   if (workload === 'realtime') {
     return (
       <div className="space-y-6">
-        <h2 className="text-h5 text-white">What is your latency requirement?</h2>
+        <div className="space-y-2">
+          <h2 className="text-h5 text-white">What is your latency requirement?</h2>
+          <p className="text-sm text-grey">
+            Latency is the time between a change happening in your database and it being delivered to your destination.
+            Lower latency requires more resources but gives faster updates.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <OptionCard
             selected={config.latency === 'ultra-low'}
             onClick={() => onChange({ latency: 'ultra-low' })}
             icon={Zap}
             title="Ultra-Low (< 10ms)"
-            description="For real-time trading, gaming, instant responses"
+            description="For high-frequency trading, gaming, or anything requiring instant response"
             badge="Community"
+            details="Minimal batching, no compression, ring buffer"
           />
           <OptionCard
             selected={config.latency === 'low'}
             onClick={() => onChange({ latency: 'low' })}
             icon={Gauge}
             title="Low (10-100ms)"
-            description="For live dashboards, notifications, monitoring"
+            description="For live dashboards and monitoring where sub-second updates are important"
             badge="Pro"
             badgeColor="text-accent-orange"
+            details="LZ4 compression, adaptive batching, disk overflow"
           />
           <OptionCard
             selected={config.latency === 'standard'}
             onClick={() => onChange({ latency: 'standard' })}
             icon={Clock}
             title="Standard (100ms-1s)"
-            description="For analytics, reporting, non-critical updates"
+            description="For analytics and reporting where near-real-time is sufficient"
             badge="Pro"
             badgeColor="text-accent-orange"
+            details="Hybrid compression, larger batches, best throughput"
           />
         </div>
+
+        <InfoBanner type="tip" title="Latency vs Throughput tradeoff">
+          Lower latency means smaller batches and less compression, which can reduce throughput.
+          If you don&apos;t need sub-10ms updates, choosing &quot;Low&quot; or &quot;Standard&quot; will give you better resource efficiency.
+        </InfoBanner>
       </div>
     );
   }
@@ -364,40 +452,62 @@ function DetailsStep({
   if (workload === 'streaming') {
     return (
       <div className="space-y-8">
-        <div>
-          <h2 className="text-h5 text-white mb-4">What delivery guarantee do you need?</h2>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-h5 text-white">What delivery guarantee do you need?</h2>
+            <p className="text-sm text-grey">
+              Delivery guarantees determine how Savegress handles failures. This is one of the most important decisions for event-driven systems.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <OptionCard
-              selected={config.delivery === 'at-least-once'}
-              onClick={() => onChange({ delivery: 'at-least-once' })}
-              icon={Check}
-              title="At-Least-Once"
-              description="Events delivered at least once, may have duplicates"
-              badge="Pro"
-              badgeColor="text-accent-orange"
-            />
             <OptionCard
               selected={config.delivery === 'at-most-once'}
               onClick={() => onChange({ delivery: 'at-most-once' })}
               icon={Zap}
               title="At-Most-Once"
-              description="Events delivered at most once, may lose events"
+              description="Events may be lost but will never be duplicated. Fastest option."
               badge="Community"
+              details="Fire-and-forget, no retries"
+            />
+            <OptionCard
+              selected={config.delivery === 'at-least-once'}
+              onClick={() => onChange({ delivery: 'at-least-once' })}
+              icon={Check}
+              title="At-Least-Once"
+              description="Events will be delivered at least once. Some duplicates possible."
+              badge="Pro"
+              badgeColor="text-accent-orange"
+              details="Retries with backoff, DLQ support"
             />
             <OptionCard
               selected={config.delivery === 'exactly-once'}
               onClick={() => onChange({ delivery: 'exactly-once' })}
               icon={Shield}
               title="Exactly-Once"
-              description="Every event delivered exactly once, no duplicates"
+              description="Every event delivered exactly once. Most reliable but complex."
               badge="Enterprise"
               badgeColor="text-accent-cyan"
+              details="Transactions, idempotency, full HA"
             />
           </div>
+
+          <ExpandableSection title="What do these guarantees mean?" icon={BookOpen}>
+            <div className="space-y-3 text-sm text-grey">
+              <p><strong className="text-white">At-Most-Once:</strong> If delivery fails, the event is dropped. Use when losing an occasional event is acceptable (e.g., analytics, metrics).</p>
+              <p><strong className="text-white">At-Least-Once:</strong> Failed events are retried. Your consumer needs to handle duplicates (e.g., using idempotent operations or deduplication).</p>
+              <p><strong className="text-white">Exactly-Once:</strong> Complex coordination ensures no data loss or duplicates. Required for financial transactions, inventory, or any business-critical data.</p>
+            </div>
+          </ExpandableSection>
         </div>
 
-        <div>
-          <h2 className="text-h5 text-white mb-4">What is your event volume?</h2>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-h5 text-white">What is your event volume?</h2>
+            <p className="text-sm text-grey">
+              How many events per second does your database typically produce? This helps us tune buffer sizes, parallelism, and compression.
+            </p>
+          </div>
           <VolumeSelector selected={config.volume} onChange={(volume) => onChange({ volume })} />
         </div>
       </div>
@@ -407,40 +517,62 @@ function DetailsStep({
   if (workload === 'replication') {
     return (
       <div className="space-y-8">
-        <div>
-          <h2 className="text-h5 text-white mb-4">What is your Recovery Point Objective (RPO)?</h2>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-h5 text-white flex items-center gap-2">
+              What is your Recovery Point Objective (RPO)?
+              <HelpIcon text="RPO is the maximum acceptable data loss in case of failure, measured in time" />
+            </h2>
+            <p className="text-sm text-grey">
+              RPO determines how much data you could lose in a disaster. Shorter RPO requires more frequent checkpoints and replication.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <OptionCard
               selected={config.recovery === 'minimal'}
               onClick={() => onChange({ recovery: 'minimal' })}
               icon={Zap}
               title="< 1 minute"
-              description="Near-zero data loss, continuous replication"
+              description="Near-zero data loss. Continuous replication with frequent checkpoints."
               badge="Enterprise"
               badgeColor="text-accent-cyan"
+              details="PITR, Raft clustering, cloud storage"
             />
             <OptionCard
               selected={config.recovery === 'standard'}
               onClick={() => onChange({ recovery: 'standard' })}
               icon={Clock}
               title="1-15 minutes"
-              description="Standard recovery window, periodic snapshots"
+              description="Standard recovery window. Good balance of safety and resources."
               badge="Pro"
               badgeColor="text-accent-orange"
+              details="Hourly snapshots, auto schema evolution"
             />
             <OptionCard
               selected={config.recovery === 'strict'}
               onClick={() => onChange({ recovery: 'strict' })}
               icon={HardDrive}
               title="> 15 minutes"
-              description="Relaxed recovery, cost-optimized"
+              description="Relaxed recovery. Cost-optimized for non-critical data."
               badge="Community"
+              details="Async checkpoints, basic recovery"
             />
           </div>
+
+          <InfoBanner type="info" title="What is RPO?">
+            If your RPO is 1 minute, that means in the worst case (complete system failure), you could lose up to 1 minute of data.
+            For critical systems like financial data, you want minimal RPO. For analytics or logs, longer RPO is often acceptable.
+          </InfoBanner>
         </div>
 
-        <div>
-          <h2 className="text-h5 text-white mb-4">How many tables are you replicating?</h2>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-h5 text-white">How many tables are you replicating?</h2>
+            <p className="text-sm text-grey">
+              The number of tables affects parallelism settings and resource requirements.
+            </p>
+          </div>
           <VolumeSelector selected={config.volume} onChange={(volume) => onChange({ volume })} volumeType="tables" />
         </div>
       </div>
@@ -450,8 +582,20 @@ function DetailsStep({
   if (workload === 'batch') {
     return (
       <div className="space-y-6">
-        <h2 className="text-h5 text-white mb-4">What is your batch volume?</h2>
+        <div className="space-y-2">
+          <h2 className="text-h5 text-white">What is your batch volume?</h2>
+          <p className="text-sm text-grey">
+            For batch processing, we optimize for maximum throughput rather than low latency.
+            Higher volumes benefit from more aggressive compression and parallelism.
+          </p>
+        </div>
+
         <VolumeSelector selected={config.volume} onChange={(volume) => onChange({ volume })} />
+
+        <InfoBanner type="tip" title="Batch processing benefits">
+          Batch mode allows for maximum compression (up to 15x), parallel processing across tables,
+          and optimal resource utilization. Perfect for nightly ETL or periodic sync jobs.
+        </InfoBanner>
       </div>
     );
   }
@@ -459,7 +603,7 @@ function DetailsStep({
   return null;
 }
 
-// Option card component
+// Option card component with more details
 function OptionCard({
   selected,
   onClick,
@@ -468,6 +612,7 @@ function OptionCard({
   description,
   badge,
   badgeColor = 'text-grey',
+  details,
 }: {
   selected: boolean;
   onClick: () => void;
@@ -476,6 +621,7 @@ function OptionCard({
   description: string;
   badge?: string;
   badgeColor?: string;
+  details?: string;
 }) {
   return (
     <button
@@ -490,10 +636,24 @@ function OptionCard({
         <div className={`p-2 rounded-lg ${selected ? 'bg-accent-cyan/20' : 'bg-primary-dark'}`}>
           <Icon className={`w-5 h-5 ${selected ? 'text-accent-cyan' : 'text-grey'}`} />
         </div>
-        {badge && <span className={`text-xs font-medium ${badgeColor}`}>{badge}</span>}
+        {badge && (
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+            badgeColor === 'text-accent-cyan' ? 'bg-accent-cyan/20' :
+            badgeColor === 'text-accent-orange' ? 'bg-accent-orange/20' :
+            'bg-grey/20'
+          } ${badgeColor}`}>
+            {badge}
+          </span>
+        )}
       </div>
       <h3 className="font-medium text-white">{title}</h3>
       <p className="text-sm text-grey mt-1">{description}</p>
+      {details && (
+        <p className="text-xs text-accent-cyan/70 mt-2 flex items-center gap-1">
+          <Info className="w-3 h-3" />
+          {details}
+        </p>
+      )}
     </button>
   );
 }
@@ -511,29 +671,46 @@ function VolumeSelector({
   const options =
     volumeType === 'events'
       ? [
-          { id: 'low' as VolumeLevel, title: 'Low', description: '< 1,000 events/sec', badge: 'Community' },
-          { id: 'medium' as VolumeLevel, title: 'Medium', description: '1K - 50K events/sec', badge: 'Pro', badgeColor: 'text-accent-orange' },
-          { id: 'high' as VolumeLevel, title: 'High', description: '> 50K events/sec', badge: 'Enterprise', badgeColor: 'text-accent-cyan' },
+          { id: 'low' as VolumeLevel, title: 'Low Volume', description: '< 1,000 events/sec', badge: 'Community', tip: 'Small apps, development' },
+          { id: 'medium' as VolumeLevel, title: 'Medium Volume', description: '1K - 50K events/sec', badge: 'Pro', badgeColor: 'text-accent-orange', tip: 'Production workloads' },
+          { id: 'high' as VolumeLevel, title: 'High Volume', description: '> 50K events/sec', badge: 'Enterprise', badgeColor: 'text-accent-cyan', tip: 'Large-scale, multi-region' },
         ]
       : [
-          { id: 'low' as VolumeLevel, title: 'Small', description: '< 10 tables', badge: 'Community' },
-          { id: 'medium' as VolumeLevel, title: 'Medium', description: '10-100 tables', badge: 'Pro', badgeColor: 'text-accent-orange' },
-          { id: 'high' as VolumeLevel, title: 'Large', description: '> 100 tables', badge: 'Enterprise', badgeColor: 'text-accent-cyan' },
+          { id: 'low' as VolumeLevel, title: 'Small', description: '< 10 tables', badge: 'Community', tip: 'Single service database' },
+          { id: 'medium' as VolumeLevel, title: 'Medium', description: '10-100 tables', badge: 'Pro', badgeColor: 'text-accent-orange', tip: 'Typical production app' },
+          { id: 'high' as VolumeLevel, title: 'Large', description: '> 100 tables', badge: 'Enterprise', badgeColor: 'text-accent-cyan', tip: 'Enterprise monolith or multi-tenant' },
         ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {options.map((option) => (
-        <OptionCard
+        <button
           key={option.id}
-          selected={selected === option.id}
           onClick={() => onChange(option.id)}
-          icon={option.id === 'low' ? Gauge : option.id === 'medium' ? Server : Zap}
-          title={option.title}
-          description={option.description}
-          badge={option.badge}
-          badgeColor={option.badgeColor}
-        />
+          className={`p-4 rounded-xl border-2 text-left transition-all ${
+            selected === option.id
+              ? 'border-accent-cyan bg-accent-cyan/10'
+              : 'border-cyan-40 hover:border-accent-cyan/50 hover:bg-primary-dark/50'
+          }`}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className={`p-2 rounded-lg ${selected === option.id ? 'bg-accent-cyan/20' : 'bg-primary-dark'}`}>
+              {option.id === 'low' ? <Gauge className={`w-5 h-5 ${selected === option.id ? 'text-accent-cyan' : 'text-grey'}`} /> :
+               option.id === 'medium' ? <Server className={`w-5 h-5 ${selected === option.id ? 'text-accent-cyan' : 'text-grey'}`} /> :
+               <Zap className={`w-5 h-5 ${selected === option.id ? 'text-accent-cyan' : 'text-grey'}`} />}
+            </div>
+            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+              option.badgeColor === 'text-accent-cyan' ? 'bg-accent-cyan/20' :
+              option.badgeColor === 'text-accent-orange' ? 'bg-accent-orange/20' :
+              'bg-grey/20'
+            } ${option.badgeColor || 'text-grey'}`}>
+              {option.badge}
+            </span>
+          </div>
+          <h3 className="font-medium text-white">{option.title}</h3>
+          <p className="text-sm text-grey">{option.description}</p>
+          <p className="text-xs text-accent-cyan/70 mt-2">{option.tip}</p>
+        </button>
       ))}
     </div>
   );
@@ -553,49 +730,70 @@ function ResultStep({
 }) {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-h5 text-white">Your Optimized Configuration</h2>
-        <div className="flex items-center gap-2">
-          <span
-            className={`px-3 py-1 rounded-full text-sm font-medium ${
-              config.requiredTier === 'enterprise'
-                ? 'bg-accent-cyan/20 text-accent-cyan'
-                : config.requiredTier === 'pro'
-                ? 'bg-accent-orange/20 text-accent-orange'
-                : 'bg-grey/20 text-grey'
-            }`}
-          >
-            {config.requiredTier.charAt(0).toUpperCase() + config.requiredTier.slice(1)} License
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-h5 text-white flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-accent-cyan" />
+            Your Optimized Configuration
+          </h2>
+          <p className="text-sm text-grey mt-1">
+            This configuration is tailored to your requirements. Copy it or download to get started.
+          </p>
         </div>
+        <span
+          className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap ${
+            config.requiredTier === 'enterprise'
+              ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/30'
+              : config.requiredTier === 'pro'
+              ? 'bg-accent-orange/20 text-accent-orange border border-accent-orange/30'
+              : 'bg-grey/20 text-grey border border-grey/30'
+          }`}
+        >
+          {config.requiredTier.charAt(0).toUpperCase() + config.requiredTier.slice(1)} License Required
+        </span>
       </div>
 
-      {/* Stats */}
+      {/* Stats with explanations */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-primary-dark/50 rounded-lg p-4">
-          <p className="text-xs text-grey mb-1">Est. Throughput</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-xs text-grey">Est. Throughput</p>
+            <HelpIcon text="Maximum number of events that can be processed per second" />
+          </div>
           <p className="text-lg font-medium text-white">{config.estimatedThroughput}</p>
         </div>
         <div className="bg-primary-dark/50 rounded-lg p-4">
-          <p className="text-xs text-grey mb-1">Est. Latency</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-xs text-grey">Est. Latency</p>
+            <HelpIcon text="Expected delay between a change and its delivery" />
+          </div>
           <p className="text-lg font-medium text-white">{config.estimatedLatency}</p>
         </div>
         <div className="bg-primary-dark/50 rounded-lg p-4">
-          <p className="text-xs text-grey mb-1">Compression</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-xs text-grey">Compression</p>
+            <HelpIcon text="How much smaller your data will be after compression" />
+          </div>
           <p className="text-lg font-medium text-white">{config.compressionRatio}</p>
         </div>
         <div className="bg-primary-dark/50 rounded-lg p-4">
-          <p className="text-xs text-grey mb-1">Features</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-xs text-grey">Features</p>
+            <HelpIcon text="Number of optimizations enabled in this config" />
+          </div>
           <p className="text-lg font-medium text-white">{config.features.length}</p>
         </div>
       </div>
 
-      {/* Features */}
+      {/* Features explanation */}
       <div>
-        <h3 className="text-sm font-medium text-grey mb-3">Enabled Features</h3>
+        <h3 className="text-sm font-medium text-grey mb-3 flex items-center gap-2">
+          Enabled Features
+          <HelpIcon text="These optimizations are included based on your requirements" />
+        </h3>
         <div className="flex flex-wrap gap-2">
           {config.features.map((feature) => (
-            <span key={feature} className="px-3 py-1 rounded-full bg-accent-cyan/10 text-accent-cyan text-sm">
+            <span key={feature} className="px-3 py-1.5 rounded-full bg-accent-cyan/10 text-accent-cyan text-sm border border-accent-cyan/20">
               {feature}
             </span>
           ))}
@@ -605,7 +803,10 @@ function ResultStep({
       {/* YAML Config */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-medium text-grey">Configuration (YAML)</h3>
+          <h3 className="text-sm font-medium text-grey flex items-center gap-2">
+            Configuration File (YAML)
+            <HelpIcon text="Save this as savegress-config.yaml in your project" />
+          </h3>
           <div className="flex items-center gap-2">
             <button
               onClick={onCopy}
@@ -623,27 +824,39 @@ function ResultStep({
             </button>
           </div>
         </div>
-        <pre className="bg-[#0a1628] rounded-xl p-4 overflow-x-auto text-sm text-grey font-mono border border-cyan-40">
+        <pre className="bg-[#0a1628] rounded-xl p-4 overflow-x-auto text-sm text-grey font-mono border border-cyan-40 max-h-96">
           <code>{config.yaml}</code>
         </pre>
       </div>
 
-      {/* Pro/Enterprise notice */}
+      {/* License notice with more context */}
       {config.requiredTier !== 'community' && (
-        <div className="flex items-start gap-3 p-4 rounded-lg bg-accent-orange/10 border border-accent-orange/30">
-          <AlertCircle className="w-5 h-5 text-accent-orange flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm text-white font-medium">
-              This configuration requires a {config.requiredTier.charAt(0).toUpperCase() + config.requiredTier.slice(1)} license
-            </p>
-            <p className="text-sm text-grey mt-1">
-              {config.requiredTier === 'enterprise'
-                ? 'Contact sales for Enterprise pricing and features.'
-                : 'Upgrade to Pro to unlock compression, DLQ, and more.'}
-            </p>
-          </div>
-        </div>
+        <InfoBanner
+          type={config.requiredTier === 'enterprise' ? 'info' : 'warning'}
+          title={`This configuration requires a ${config.requiredTier.charAt(0).toUpperCase() + config.requiredTier.slice(1)} license`}
+          action={config.requiredTier === 'enterprise' ? { label: 'Contact Sales', href: '/contact' } : { label: 'Upgrade to Pro', href: '/pricing' }}
+        >
+          <p>
+            {config.requiredTier === 'enterprise'
+              ? 'Enterprise features include exactly-once delivery, PITR, HA clustering, and unlimited scale. Contact us for custom pricing.'
+              : 'Pro includes compression, DLQ, adaptive batching, and more. Upgrade to unlock these features.'}
+          </p>
+        </InfoBanner>
       )}
+
+      {/* Next steps */}
+      <ExpandableSection title="What's next?" icon={BookOpen} defaultExpanded>
+        <div className="space-y-3 text-sm text-grey">
+          <p>Now that you have your configuration:</p>
+          <ol className="list-decimal list-inside space-y-2">
+            <li>Save this file as <code className="text-accent-cyan bg-primary-dark px-1 rounded">savegress-config.yaml</code> in your project</li>
+            <li>Replace the placeholder values (<code className="text-accent-cyan bg-primary-dark px-1 rounded">${'{'}DB_HOST{'}'}</code>, etc.) with your actual credentials</li>
+            <li>Create a connection in Savegress pointing to your database</li>
+            <li>Create a pipeline using this configuration</li>
+            <li>Start your pipeline and watch the data flow!</li>
+          </ol>
+        </div>
+      </ExpandableSection>
     </div>
   );
 }
@@ -652,7 +865,7 @@ function ResultStep({
 function generateConfig(state: ConfigState): GeneratedConfig {
   const { workload, latency, delivery, volume, recovery } = state;
 
-  let yaml = '# Savegress Configuration\n# Generated by Optimizer\n\n';
+  let yaml = '# Savegress Configuration\n# Generated by Optimizer\n# See docs at https://savegress.com/docs/config\n\n';
   let requiredTier: LicenseTier = 'community';
   const features: string[] = [];
   let estimatedThroughput = '1K events/sec';
@@ -660,17 +873,19 @@ function generateConfig(state: ConfigState): GeneratedConfig {
   let compressionRatio = 'None';
 
   // Source config (placeholder)
-  yaml += `source:
+  yaml += `# Source Database Connection
+# Replace these environment variables with your actual values
+source:
   type: postgres
-  host: \${DB_HOST}
+  host: \${DB_HOST}        # e.g., db.example.com
   port: 5432
-  database: \${DB_NAME}
-  user: \${DB_USER}
+  database: \${DB_NAME}    # e.g., myapp
+  user: \${DB_USER}        # e.g., replication_user
   password: \${DB_PASSWORD}
   slot_name: savegress_slot
   publication: savegress_pub
   tables:
-    - public.*
+    - public.*             # Replicate all tables in public schema
 
 `;
 
@@ -678,18 +893,20 @@ function generateConfig(state: ConfigState): GeneratedConfig {
   if (workload === 'realtime') {
     if (latency === 'ultra-low') {
       yaml += `# Ultra-low latency configuration
+# Optimized for < 10ms end-to-end latency
+
 compression:
-  enabled: false
+  enabled: false           # No compression for minimum latency
 
 batching:
-  max_size: 1
+  max_size: 1              # Send each event immediately
   max_wait: 1ms
   adaptive: false
 
 buffer:
-  type: ring
+  type: ring               # In-memory ring buffer
   size: 1024
-  overflow_policy: drop_oldest
+  overflow_policy: drop_oldest  # Drop old events if buffer fills
 
 rate_limiting:
   algorithm: token_bucket
@@ -697,12 +914,12 @@ rate_limiting:
   burst_size: 1000
 
 backpressure:
-  strategy: pause
+  strategy: pause          # Pause source if destination is slow
   high_watermark: 0.7
   low_watermark: 0.3
 
 replication:
-  ack_mode: none
+  ack_mode: none           # Fire and forget for speed
 `;
       features.push('Token Bucket Rate Limiting', 'Ring Buffer', 'No Compression');
       estimatedLatency = '< 10ms';
@@ -710,24 +927,26 @@ replication:
     } else if (latency === 'low') {
       requiredTier = 'pro';
       yaml += `# Low latency configuration
+# Optimized for 10-100ms latency with good throughput
+
 compression:
   enabled: true
-  algorithm: lz4
+  algorithm: lz4           # Fast compression
   lz4:
-    level: 3
-  min_size: 512
+    level: 3               # Balance of speed and ratio
+  min_size: 512            # Only compress larger messages
 
 batching:
   max_size: 10
   max_wait: 10ms
-  adaptive: true
+  adaptive: true           # Automatically adjust batch size
 
 buffer:
   type: ring
   size: 4096
   overflow:
     enabled: true
-    max_size: 1GB
+    max_size: 1GB          # Spill to disk if needed
 
 rate_limiting:
   algorithm: token_bucket
@@ -740,7 +959,7 @@ backpressure:
   low_watermark: 0.4
 
 replication:
-  ack_mode: leader
+  ack_mode: leader         # Wait for leader acknowledgment
 `;
       features.push('LZ4 Compression', 'Adaptive Batching', 'Disk Overflow', 'Adaptive Throttle');
       estimatedLatency = '10-100ms';
@@ -749,13 +968,15 @@ replication:
     } else {
       requiredTier = 'pro';
       yaml += `# Standard latency configuration
+# Optimized for best throughput with acceptable latency
+
 compression:
   enabled: true
-  algorithm: hybrid
+  algorithm: hybrid        # Use different compression based on size
   hybrid:
     threshold: 4096
-    small_algo: lz4
-    large_algo: zstd
+    small_algo: lz4        # LZ4 for small messages
+    large_algo: zstd       # ZSTD for large messages
     large_level: 3
 
 batching:
@@ -787,13 +1008,15 @@ replication:
     if (delivery === 'exactly-once') {
       requiredTier = 'enterprise';
       yaml += `# Exactly-once streaming configuration
+# Guaranteed exactly-once delivery - no duplicates, no data loss
+
 compression:
   enabled: true
   algorithm: zstd
   zstd:
     level: 3
   simd:
-    enabled: true
+    enabled: true          # Use SIMD for faster compression
 
 batching:
   max_size: 1000
@@ -803,19 +1026,19 @@ batching:
 exactly_once:
   enabled: true
   transaction_timeout: 60s
-  idempotent_producer: true
+  idempotent_producer: true  # Enable idempotent writes
 
 dlq:
-  enabled: true
+  enabled: true            # Dead letter queue for failed events
   max_retries: 10
-  preserve_order: true
+  preserve_order: true     # Maintain event ordering
 
 replication:
-  ack_mode: all
-  min_isr: 2
+  ack_mode: all            # Wait for all replicas
+  min_isr: 2               # Minimum in-sync replicas
 
 ha:
-  enabled: true
+  enabled: true            # High availability mode
 `;
       features.push('Exactly-Once', 'SIMD Compression', 'DLQ', 'HA Mode', 'All-ISR ACK');
       estimatedLatency = '50-200ms';
@@ -823,6 +1046,8 @@ ha:
     } else if (delivery === 'at-least-once') {
       requiredTier = 'pro';
       yaml += `# At-least-once streaming configuration
+# Events guaranteed to be delivered, may have duplicates
+
 compression:
   enabled: true
   algorithm: zstd
@@ -835,7 +1060,7 @@ batching:
   adaptive: true
 
 dlq:
-  enabled: true
+  enabled: true            # Dead letter queue
   max_retries: 5
   retry_delay: 1s
   exponential_backoff: true
@@ -844,7 +1069,7 @@ retry:
   max_attempts: 10
   initial_delay: 100ms
   max_delay: 30s
-  multiplier: 2.0
+  multiplier: 2.0          # Double delay each retry
 
 backpressure:
   strategy: adaptive_throttle
@@ -858,6 +1083,8 @@ replication:
       compressionRatio = '4-10x';
     } else {
       yaml += `# At-most-once streaming configuration
+# Fastest delivery, events may be lost on failure
+
 compression:
   enabled: false
 
@@ -866,10 +1093,10 @@ batching:
   max_wait: 50ms
 
 buffer:
-  overflow_policy: drop_newest
+  overflow_policy: drop_newest  # Drop new events if buffer is full
 
 replication:
-  ack_mode: none
+  ack_mode: none           # Fire and forget
 `;
       features.push('Fire-and-Forget', 'Drop on Overflow');
       estimatedLatency = '< 50ms';
@@ -891,6 +1118,8 @@ replication:
     if (recovery === 'minimal') {
       requiredTier = 'enterprise';
       yaml += `# Minimal RPO replication configuration
+# Near-zero data loss with Point-in-Time Recovery
+
 compression:
   enabled: true
   algorithm: zstd
@@ -900,13 +1129,13 @@ compression:
     enabled: true
 
 checkpoint:
-  interval: 10s
-  sync_mode: sync
+  interval: 10s            # Checkpoint every 10 seconds
+  sync_mode: sync          # Synchronous checkpointing
 
 pitr:
-  enabled: true
-  retention: 7d
-  granularity: 1m
+  enabled: true            # Point-in-Time Recovery
+  retention: 7d            # Keep 7 days of history
+  granularity: 1m          # 1-minute recovery granularity
 
 storage:
   backend: s3
@@ -922,12 +1151,12 @@ replication:
 schema:
   evolution:
     enabled: true
-    approval_workflow: true
+    approval_workflow: true  # Require approval for schema changes
 
 ha:
   enabled: true
   cluster:
-    consensus: raft
+    consensus: raft        # Raft consensus for coordination
     nodes: 3
 `;
       features.push('PITR', 'Cloud Storage', 'Raft Clustering', 'Schema Approval', 'SIMD');
@@ -936,6 +1165,8 @@ ha:
     } else if (recovery === 'standard') {
       requiredTier = 'pro';
       yaml += `# Standard replication configuration
+# Good balance of data safety and resource usage
+
 compression:
   enabled: true
   algorithm: zstd
@@ -948,13 +1179,13 @@ checkpoint:
 
 snapshot:
   enabled: true
-  interval: 1h
-  retention_count: 24
+  interval: 1h             # Hourly snapshots
+  retention_count: 24      # Keep 24 snapshots
 
 schema:
   evolution:
     enabled: true
-    compatible_changes: auto
+    compatible_changes: auto  # Auto-apply compatible changes
 
 replication:
   ack_mode: leader
@@ -964,6 +1195,8 @@ replication:
       compressionRatio = '4-10x';
     } else {
       yaml += `# Relaxed replication configuration
+# Cost-optimized for non-critical data
+
 checkpoint:
   interval: 15m
   sync_mode: async
@@ -990,27 +1223,29 @@ replication:
     if (volume === 'high') {
       requiredTier = 'enterprise';
       yaml += `# High volume batch configuration
+# Maximum throughput for large-scale ETL
+
 compression:
   enabled: true
   algorithm: zstd
   zstd:
-    level: 12
+    level: 12              # Maximum compression
   simd:
     enabled: true
 
 batching:
   mode: time
-  interval: 5m
+  interval: 5m             # Process every 5 minutes
   max_size: 100000
 
 parallel:
-  table_parallelism: 32
+  table_parallelism: 32    # Process 32 tables in parallel
   transaction_parallelism: 16
 
 storage:
   segment_size: 1GB
   compaction:
-    enabled: true
+    enabled: true          # Compact storage periodically
 `;
       features.push('SIMD Compression', 'Parallel Processing', 'Segment Compaction');
       estimatedThroughput = '100K+ events/sec';
@@ -1019,6 +1254,8 @@ storage:
     } else if (volume === 'medium') {
       requiredTier = 'pro';
       yaml += `# Medium volume batch configuration
+# Good throughput with hourly batches
+
 compression:
   enabled: true
   algorithm: zstd
@@ -1039,9 +1276,11 @@ parallel:
       compressionRatio = '6-10x';
     } else {
       yaml += `# Low volume batch configuration
+# Simple daily processing
+
 batching:
   mode: time
-  interval: 24h
+  interval: 24h            # Daily batch
   max_size: 10000
 `;
       features.push('Daily Batching');
@@ -1052,14 +1291,17 @@ batching:
 
   // Add output config
   yaml += `
+# Output Configuration
+# Configure where events should be sent
 output:
-  type: webhook  # or kafka, grpc
-  url: \${WEBHOOK_URL}
+  type: webhook            # Options: webhook, kafka, grpc, s3
+  url: \${WEBHOOK_URL}     # Your destination endpoint
   batch_size: 100
   retry:
     enabled: true
     max_attempts: 3
 
+# Observability
 logging:
   level: info
   format: json
@@ -1068,6 +1310,7 @@ metrics:
   enabled: true
   prometheus:
     enabled: true
+    port: 9090
 `;
 
   if (requiredTier === 'pro' || requiredTier === 'enterprise') {
