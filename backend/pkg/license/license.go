@@ -30,62 +30,228 @@ const (
 type Feature string
 
 const (
-	// Database features
+	// ============================================
+	// DATABASE CONNECTORS
+	// ============================================
+
+	// Community databases (free tier)
 	FeaturePostgreSQL Feature = "postgresql"
 	FeatureMySQL      Feature = "mysql"
 	FeatureMariaDB    Feature = "mariadb"
-	FeatureMongoDB    Feature = "mongodb"
-	FeatureSQLServer  Feature = "sqlserver"
-	FeatureOracle     Feature = "oracle"
-	FeatureCassandra  Feature = "cassandra"
-	FeatureDynamoDB   Feature = "dynamodb"
 
-	// Functionality features
-	FeatureSnapshot     Feature = "snapshot"
-	FeatureHA           Feature = "ha"
-	FeatureRaftCluster  Feature = "raft_cluster"
+	// Pro databases
+	FeatureMongoDB   Feature = "mongodb"
+	FeatureSQLServer Feature = "sqlserver"
+	FeatureCassandra Feature = "cassandra"
+	FeatureDynamoDB  Feature = "dynamodb"
+
+	// Enterprise databases
+	FeatureOracle Feature = "oracle"
+
+	// ============================================
+	// OUTPUT CONNECTORS
+	// ============================================
+
+	// Pro outputs
+	FeatureSnapshot    Feature = "snapshot"
+	FeatureWebhook     Feature = "webhook"
+	FeatureKafkaOutput Feature = "kafka_output"
+	FeatureGRPCOutput  Feature = "grpc_output"
+
+	// Enterprise outputs
 	FeatureCustomOutput Feature = "custom_output"
-	FeatureWebhook      Feature = "webhook"
-	FeatureKafkaOutput  Feature = "kafka_output"
-	FeatureGRPCOutput   Feature = "grpc_output"
 
-	// Enterprise features
-	FeatureSSO         Feature = "sso"
-	FeatureLDAP        Feature = "ldap"
-	FeatureAuditLog    Feature = "audit_log"
-	FeatureEncryption  Feature = "encryption"
+	// ============================================
+	// PERFORMANCE & COMPRESSION
+	// ============================================
+
+	// Pro: Basic compression (Hybrid, ZSTD, LZ4)
+	// Provides 4-10x storage savings - clear ROI for paying customers
+	FeatureCompression Feature = "compression"
+
+	// Enterprise: SIMD-optimized compression (AVX2, AVX-512, NEON)
+	// Maximum throughput for high-volume deployments
+	FeatureCompressionSIMD Feature = "compression_simd"
+
+	// ============================================
+	// RELIABILITY & FLOW CONTROL
+	// ============================================
+
+	// Pro: Advanced rate limiting (adaptive, sliding window, multi-tier)
+	// Note: Basic token bucket rate limiting is FREE for all tiers
+	FeatureAdvancedRateLimiting Feature = "advanced_rate_limiting"
+
+	// Pro: Backpressure control for production stability
+	FeatureBackpressure Feature = "backpressure"
+
+	// Pro: Dead Letter Queue for failed message handling
+	FeatureDLQ Feature = "dlq"
+
+	// Pro: Event replay for debugging and recovery
+	FeatureReplay Feature = "replay"
+
+	// Enterprise: Exactly-once delivery semantics
+	// Critical for financial and regulated workloads
+	FeatureExactlyOnce Feature = "exactly_once"
+
+	// ============================================
+	// DISASTER RECOVERY
+	// ============================================
+
+	// Enterprise: Point-in-time recovery
+	FeaturePITR Feature = "pitr"
+
+	// Enterprise: Cloud storage backends (S3, GCS, Azure)
+	FeatureCloudStorage Feature = "cloud_storage"
+
+	// ============================================
+	// SCHEMA MANAGEMENT
+	// ============================================
+
+	// Pro: Automatic schema evolution (detection + safe auto-apply)
+	FeatureSchemaEvolution Feature = "schema_evolution"
+
+	// Enterprise: Schema migration approval workflow
+	// Required for change management compliance
+	FeatureSchemaMigrationApproval Feature = "schema_migration_approval"
+
+	// ============================================
+	// OBSERVABILITY & MONITORING
+	// ============================================
+
+	// Pro: Prometheus metrics export
+	// Note: Basic internal metrics are FREE for all tiers
+	FeaturePrometheus Feature = "prometheus"
+
+	// Pro: SLA monitoring (Bronze/Silver/Gold levels)
+	FeatureSLAMonitoring Feature = "sla_monitoring"
+
+	// Enterprise: Full OpenTelemetry integration (traces, spans)
+	FeatureOpenTelemetry Feature = "opentelemetry"
+
+	// ============================================
+	// HIGH AVAILABILITY & CLUSTERING
+	// ============================================
+
+	// Enterprise: High availability mode
+	FeatureHA Feature = "ha"
+
+	// Enterprise: Raft consensus clustering
+	FeatureRaftCluster Feature = "raft_cluster"
+
+	// Enterprise: Multi-region deployment
+	FeatureMultiRegion Feature = "multi_region"
+
+	// ============================================
+	// SECURITY & COMPLIANCE
+	// ============================================
+
+	// Enterprise: End-to-end encryption
+	FeatureEncryption Feature = "encryption"
+
+	// Enterprise: Mutual TLS authentication
+	FeatureMTLS Feature = "mtls"
+
+	// Enterprise: Role-based access control
+	FeatureRBAC Feature = "rbac"
+
+	// Enterprise: HashiCorp Vault integration
+	FeatureVault Feature = "vault"
+
+	// Enterprise: Audit logging
+	FeatureAuditLog Feature = "audit_log"
+
+	// Enterprise: SSO integration
+	FeatureSSO Feature = "sso"
+
+	// Enterprise: LDAP integration
+	FeatureLDAP Feature = "ldap"
+
+	// Enterprise: Multi-tenant isolation
 	FeatureMultiTenant Feature = "multi_tenant"
 )
 
-// CommunityFeatures are available in the free tier
+// CommunityFeatures are available in the free tier.
+// Philosophy: Community should enable a working production system for startups/SMB.
+// Basic safety features (token bucket rate limiting, circuit breaker, health checks,
+// basic metrics) are included to ensure system stability - these are not premium features.
 var CommunityFeatures = []Feature{
+	// Databases: Core open-source databases
 	FeaturePostgreSQL,
 	FeatureMySQL,
 	FeatureMariaDB,
+	// Note: Basic rate limiting, circuit breaker, health checks, and internal metrics
+	// are available to all tiers without explicit feature flags - they are built-in safety features
 }
 
-// ProFeatures include all community features plus these
+// ProFeatures are for production at scale - performance, reliability, and DevOps tooling.
+// Target: Scale-ups and serious production deployments that need performance and operations features.
 var ProFeatures = []Feature{
+	// Additional databases
 	FeatureMongoDB,
 	FeatureSQLServer,
 	FeatureCassandra,
 	FeatureDynamoDB,
+
+	// Output connectors
 	FeatureSnapshot,
 	FeatureKafkaOutput,
 	FeatureGRPCOutput,
 	FeatureWebhook,
+
+	// Performance: Compression provides clear ROI (4-10x storage savings)
+	FeatureCompression,
+
+	// Reliability at scale
+	FeatureAdvancedRateLimiting, // Adaptive, sliding window, multi-tier
+	FeatureBackpressure,
+	FeatureDLQ,
+	FeatureReplay,
+
+	// Schema management for zero-downtime operations
+	FeatureSchemaEvolution,
+
+	// Observability for DevOps integration
+	FeaturePrometheus,
+	FeatureSLAMonitoring,
 }
 
-// EnterpriseFeatures include all pro features plus these
+// EnterpriseFeatures are for governance, compliance, and multi-team operations.
+// Target: Large organizations, regulated industries, and multi-team deployments.
 var EnterpriseFeatures = []Feature{
+	// Premium database
 	FeatureOracle,
+
+	// Custom integrations
+	FeatureCustomOutput,
+
+	// Maximum performance
+	FeatureCompressionSIMD,
+	FeatureExactlyOnce,
+
+	// Disaster recovery
+	FeaturePITR,
+	FeatureCloudStorage,
+
+	// Advanced schema governance
+	FeatureSchemaMigrationApproval,
+
+	// Full observability
+	FeatureOpenTelemetry,
+
+	// High availability & clustering
 	FeatureHA,
 	FeatureRaftCluster,
-	FeatureCustomOutput,
+	FeatureMultiRegion,
+
+	// Security & compliance
+	FeatureEncryption,
+	FeatureMTLS,
+	FeatureRBAC,
+	FeatureVault,
+	FeatureAuditLog,
 	FeatureSSO,
 	FeatureLDAP,
-	FeatureAuditLog,
-	FeatureEncryption,
 	FeatureMultiTenant,
 }
 

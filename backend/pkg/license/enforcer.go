@@ -261,6 +261,249 @@ func (g *FeatureGate) GetTier() Tier {
 	return license.Tier
 }
 
+// ============================================
+// FEATURE-SPECIFIC GATE FUNCTIONS
+// ============================================
+// These functions provide clear, documented checks for each licensed feature.
+// They return descriptive errors that help users understand licensing requirements.
+
+// RequireCompression checks if compression feature is licensed (Pro+)
+func (g *FeatureGate) RequireCompression() error {
+	if !g.manager.HasFeature(FeatureCompression) {
+		return fmt.Errorf("%w: compression requires Pro license or higher", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireCompressionSIMD checks if SIMD compression is licensed (Enterprise)
+func (g *FeatureGate) RequireCompressionSIMD() error {
+	if !g.manager.HasFeature(FeatureCompressionSIMD) {
+		return fmt.Errorf("%w: SIMD compression optimization requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireAdvancedRateLimiting checks if advanced rate limiting is licensed (Pro+)
+// Note: Basic token bucket rate limiting is always available
+func (g *FeatureGate) RequireAdvancedRateLimiting() error {
+	if !g.manager.HasFeature(FeatureAdvancedRateLimiting) {
+		return fmt.Errorf("%w: advanced rate limiting (adaptive, sliding window, multi-tier) requires Pro license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireBackpressure checks if backpressure control is licensed (Pro+)
+func (g *FeatureGate) RequireBackpressure() error {
+	if !g.manager.HasFeature(FeatureBackpressure) {
+		return fmt.Errorf("%w: backpressure control requires Pro license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireDLQ checks if Dead Letter Queue is licensed (Pro+)
+func (g *FeatureGate) RequireDLQ() error {
+	if !g.manager.HasFeature(FeatureDLQ) {
+		return fmt.Errorf("%w: Dead Letter Queue requires Pro license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireReplay checks if event replay is licensed (Pro+)
+func (g *FeatureGate) RequireReplay() error {
+	if !g.manager.HasFeature(FeatureReplay) {
+		return fmt.Errorf("%w: event replay requires Pro license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireSchemaEvolution checks if schema evolution is licensed (Pro+)
+func (g *FeatureGate) RequireSchemaEvolution() error {
+	if !g.manager.HasFeature(FeatureSchemaEvolution) {
+		return fmt.Errorf("%w: schema evolution requires Pro license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireSchemaMigrationApproval checks if schema migration approval workflow is licensed (Enterprise)
+func (g *FeatureGate) RequireSchemaMigrationApproval() error {
+	if !g.manager.HasFeature(FeatureSchemaMigrationApproval) {
+		return fmt.Errorf("%w: schema migration approval workflow requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequirePrometheus checks if Prometheus metrics export is licensed (Pro+)
+func (g *FeatureGate) RequirePrometheus() error {
+	if !g.manager.HasFeature(FeaturePrometheus) {
+		return fmt.Errorf("%w: Prometheus metrics export requires Pro license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireSLAMonitoring checks if SLA monitoring is licensed (Pro+)
+func (g *FeatureGate) RequireSLAMonitoring() error {
+	if !g.manager.HasFeature(FeatureSLAMonitoring) {
+		return fmt.Errorf("%w: SLA monitoring requires Pro license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireOpenTelemetry checks if OpenTelemetry tracing is licensed (Enterprise)
+func (g *FeatureGate) RequireOpenTelemetry() error {
+	if !g.manager.HasFeature(FeatureOpenTelemetry) {
+		return fmt.Errorf("%w: OpenTelemetry tracing requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequirePITR checks if Point-in-Time Recovery is licensed (Enterprise)
+func (g *FeatureGate) RequirePITR() error {
+	if !g.manager.HasFeature(FeaturePITR) {
+		return fmt.Errorf("%w: Point-in-Time Recovery requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireCloudStorage checks if cloud storage backends are licensed (Enterprise)
+func (g *FeatureGate) RequireCloudStorage() error {
+	if !g.manager.HasFeature(FeatureCloudStorage) {
+		return fmt.Errorf("%w: cloud storage backends (S3, GCS, Azure) require Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireExactlyOnce checks if exactly-once delivery is licensed (Enterprise)
+func (g *FeatureGate) RequireExactlyOnce() error {
+	if !g.manager.HasFeature(FeatureExactlyOnce) {
+		return fmt.Errorf("%w: exactly-once delivery semantics require Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireMTLS checks if mutual TLS is licensed (Enterprise)
+func (g *FeatureGate) RequireMTLS() error {
+	if !g.manager.HasFeature(FeatureMTLS) {
+		return fmt.Errorf("%w: mutual TLS authentication requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireRBAC checks if RBAC is licensed (Enterprise)
+func (g *FeatureGate) RequireRBAC() error {
+	if !g.manager.HasFeature(FeatureRBAC) {
+		return fmt.Errorf("%w: role-based access control requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireVault checks if HashiCorp Vault integration is licensed (Enterprise)
+func (g *FeatureGate) RequireVault() error {
+	if !g.manager.HasFeature(FeatureVault) {
+		return fmt.Errorf("%w: HashiCorp Vault integration requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireHA checks if high availability is licensed (Enterprise)
+func (g *FeatureGate) RequireHA() error {
+	if !g.manager.HasFeature(FeatureHA) {
+		return fmt.Errorf("%w: high availability mode requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireRaftCluster checks if Raft clustering is licensed (Enterprise)
+func (g *FeatureGate) RequireRaftCluster() error {
+	if !g.manager.HasFeature(FeatureRaftCluster) {
+		return fmt.Errorf("%w: Raft consensus clustering requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// RequireMultiRegion checks if multi-region deployment is licensed (Enterprise)
+func (g *FeatureGate) RequireMultiRegion() error {
+	if !g.manager.HasFeature(FeatureMultiRegion) {
+		return fmt.Errorf("%w: multi-region deployment requires Enterprise license", ErrFeatureNotLicensed)
+	}
+	return nil
+}
+
+// ============================================
+// UPGRADE PROMPTS
+// ============================================
+// These functions return user-friendly upgrade messages for sales conversion.
+
+// GetUpgradePrompt returns a user-friendly upgrade message for a feature
+func GetUpgradePrompt(feature Feature) string {
+	prompts := map[Feature]string{
+		// Pro features
+		FeatureCompression:         "Upgrade to Pro to enable compression and save 4-10x on storage costs. Visit https://savegress.io/pricing",
+		FeatureDLQ:                 "Upgrade to Pro to enable Dead Letter Queue and prevent data loss. Visit https://savegress.io/pricing",
+		FeatureSchemaEvolution:     "Upgrade to Pro to enable automatic schema evolution. Visit https://savegress.io/pricing",
+		FeaturePrometheus:          "Upgrade to Pro to export Prometheus metrics for your monitoring stack. Visit https://savegress.io/pricing",
+		FeatureAdvancedRateLimiting: "Upgrade to Pro for adaptive rate limiting and better flow control. Visit https://savegress.io/pricing",
+		FeatureBackpressure:        "Upgrade to Pro for backpressure control at high throughput. Visit https://savegress.io/pricing",
+		FeatureReplay:              "Upgrade to Pro to replay events for debugging and recovery. Visit https://savegress.io/pricing",
+		FeatureSLAMonitoring:       "Upgrade to Pro for SLA monitoring and alerting. Visit https://savegress.io/pricing",
+
+		// Enterprise features
+		FeaturePITR:                    "Upgrade to Enterprise for Point-in-Time Recovery. Visit https://savegress.io/pricing",
+		FeatureCloudStorage:            "Upgrade to Enterprise to use S3, GCS, or Azure storage backends. Visit https://savegress.io/pricing",
+		FeatureOpenTelemetry:           "Upgrade to Enterprise for full OpenTelemetry distributed tracing. Visit https://savegress.io/pricing",
+		FeatureCompressionSIMD:         "Upgrade to Enterprise for SIMD-optimized compression. Visit https://savegress.io/pricing",
+		FeatureExactlyOnce:             "Upgrade to Enterprise for exactly-once delivery semantics. Visit https://savegress.io/pricing",
+		FeatureSchemaMigrationApproval: "Upgrade to Enterprise for schema migration approval workflows. Visit https://savegress.io/pricing",
+		FeatureMTLS:                    "Upgrade to Enterprise for mutual TLS authentication. Visit https://savegress.io/pricing",
+		FeatureRBAC:                    "Upgrade to Enterprise for role-based access control. Visit https://savegress.io/pricing",
+		FeatureVault:                   "Upgrade to Enterprise for HashiCorp Vault integration. Visit https://savegress.io/pricing",
+		FeatureHA:                      "Upgrade to Enterprise for high availability mode. Visit https://savegress.io/pricing",
+		FeatureRaftCluster:             "Upgrade to Enterprise for Raft consensus clustering. Visit https://savegress.io/pricing",
+		FeatureMultiRegion:             "Upgrade to Enterprise for multi-region deployment. Visit https://savegress.io/pricing",
+		FeatureOracle:                  "Upgrade to Enterprise to use Oracle as a source. Visit https://savegress.io/pricing",
+	}
+
+	if prompt, ok := prompts[feature]; ok {
+		return prompt
+	}
+	return "Upgrade your license to access this feature. Visit https://savegress.io/pricing"
+}
+
+// GetLimitExceededPrompt returns a user-friendly message when limits are exceeded
+func GetLimitExceededPrompt(limitType string, current, max int64) string {
+	switch limitType {
+	case "sources":
+		return fmt.Sprintf(
+			"Source limit reached (%d/%d). Upgrade to Pro for up to 10 sources, or Enterprise for unlimited. Visit https://savegress.io/pricing",
+			current, max)
+	case "tables":
+		return fmt.Sprintf(
+			"Table limit reached (%d/%d). Upgrade to Pro for up to 100 tables, or Enterprise for unlimited. Visit https://savegress.io/pricing",
+			current, max)
+	case "throughput":
+		return fmt.Sprintf(
+			"Throughput limit reached (%d/%d events/sec). Upgrade to Pro for 50K events/sec, or Enterprise for unlimited. Visit https://savegress.io/pricing",
+			current, max)
+	default:
+		return fmt.Sprintf(
+			"License limit reached (%d/%d). Upgrade your license for higher limits. Visit https://savegress.io/pricing",
+			current, max)
+	}
+}
+
+// GetExpiryWarning returns a user-friendly expiry warning message
+func GetExpiryWarning(daysRemaining int) string {
+	if daysRemaining <= 0 {
+		return "Your license has expired. Please renew at https://savegress.io/account to continue using premium features."
+	}
+	if daysRemaining == 1 {
+		return "Your license expires tomorrow. Renew at https://savegress.io/account to avoid service interruption."
+	}
+	if daysRemaining <= 7 {
+		return fmt.Sprintf("Your license expires in %d days. Renew at https://savegress.io/account", daysRemaining)
+	}
+	return fmt.Sprintf("License expires in %d days. Renew at https://savegress.io/account", daysRemaining)
+}
+
 // IsCommunity returns true if on community tier
 func (g *FeatureGate) IsCommunity() bool {
 	return g.GetTier() == TierCommunity
