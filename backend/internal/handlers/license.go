@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -300,12 +301,12 @@ func (h *LicenseHandler) ListAll(w http.ResponseWriter, r *http.Request) {
 	limit := 20
 
 	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
-		if p, err := parseInt(pageStr); err == nil && p > 0 {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
 			page = p
 		}
 	}
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		if l, err := parseInt(limitStr); err == nil && l > 0 && l <= 100 {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
 			limit = l
 		}
 	}

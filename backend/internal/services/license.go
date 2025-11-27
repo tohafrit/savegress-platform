@@ -238,6 +238,39 @@ func (s *LicenseService) GetUserLicenses(ctx context.Context, userID uuid.UUID) 
 	return licenses, nil
 }
 
+// ListAllLicenses returns all licenses with pagination (admin only)
+func (s *LicenseService) ListAllLicenses(ctx context.Context, limit, offset int) ([]models.License, int, error) {
+	// Get total count
+	var total int
+	err := s.db.Pool().QueryRow(ctx, `SELECT COUNT(*) FROM licenses`).Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated licenses
+	rows, err := s.db.Pool().Query(ctx, `
+		SELECT id, user_id, license_key, tier, status, max_sources, max_tables, max_throughput, features, hardware_id, issued_at, expires_at, revoked_at, created_at
+		FROM licenses ORDER BY created_at DESC LIMIT $1 OFFSET $2
+	`, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	licenses := make([]models.License, 0)
+	for rows.Next() {
+		var l models.License
+		err := rows.Scan(&l.ID, &l.UserID, &l.LicenseKey, &l.Tier, &l.Status,
+			&l.MaxSources, &l.MaxTables, &l.MaxThroughput, &l.Features,
+			&l.HardwareID, &l.IssuedAt, &l.ExpiresAt, &l.RevokedAt, &l.CreatedAt)
+		if err != nil {
+			return nil, 0, err
+		}
+		licenses = append(licenses, l)
+	}
+	return licenses, total, nil
+}
+
 // GetLicenseActivations returns all activations for a license
 func (s *LicenseService) GetLicenseActivations(ctx context.Context, licenseID uuid.UUID) ([]models.LicenseActivation, error) {
 	rows, err := s.db.Pool().Query(ctx, `

@@ -164,6 +164,62 @@ func (s *BillingService) ReactivateSubscription(ctx context.Context, userID uuid
 	return err
 }
 
+// UpdateSubscription upgrades or downgrades a subscription to a new plan
+func (s *BillingService) UpdateSubscription(ctx context.Context, userID uuid.UUID, newPlan string) error {
+	sub, err := s.GetSubscription(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	newPriceID := s.getPriceID(newPlan)
+	if newPriceID == "" {
+		return errors.New("invalid plan")
+	}
+
+	// Get the current subscription from Stripe
+	stripeSub, err := subscription.Get(sub.StripeSubscriptionID, nil)
+	if err != nil {
+		return fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	if len(stripeSub.Items.Data) == 0 {
+		return errors.New("subscription has no items")
+	}
+
+	// Update the subscription item with new price
+	params := &stripe.SubscriptionParams{
+		Items: []*stripe.SubscriptionItemsParams{
+			{
+				ID:    stripe.String(stripeSub.Items.Data[0].ID),
+				Price: stripe.String(newPriceID),
+			},
+		},
+		ProrationBehavior: stripe.String(string(stripe.SubscriptionSchedulePhaseProrationBehaviorCreateProrations)),
+	}
+
+	_, err = subscription.Update(sub.StripeSubscriptionID, params)
+	if err != nil {
+		return fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	// Update local record
+	_, err = s.db.Pool().Exec(ctx, `
+		UPDATE subscriptions SET plan = $1, stripe_price_id = $2, updated_at = NOW()
+		WHERE id = $3
+	`, newPlan, newPriceID, sub.ID)
+
+	return err
+}
+
+// RemovePaymentMethod removes a payment method from a customer
+func (s *BillingService) RemovePaymentMethod(ctx context.Context, paymentMethodID string) error {
+	_, err := paymentmethod.Detach(paymentMethodID, nil)
+	if err != nil {
+		return fmt.Errorf("failed to detach payment method: %w", err)
+	}
+	return nil
+}
+
 // ListInvoices returns invoices for a user
 func (s *BillingService) ListInvoices(ctx context.Context, userID uuid.UUID, limit int) ([]models.Invoice, error) {
 	rows, err := s.db.Pool().Query(ctx, `
