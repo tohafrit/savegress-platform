@@ -14,6 +14,7 @@ import {
   GitBranch,
   Database,
   Rocket,
+  Book,
 } from 'lucide-react';
 
 const navigation = [
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
   { name: 'Connections', href: '/connections', icon: Database },
   { name: 'Setup', href: '/setup', icon: Rocket },
+  { name: 'Docs', href: '/docs', icon: Book },
   { name: 'Licenses', href: '/licenses', icon: Key },
   { name: 'Downloads', href: '/downloads', icon: Download },
   { name: 'Billing', href: '/billing', icon: CreditCard },
@@ -32,7 +34,7 @@ export function Sidebar() {
   const { user, logout } = useAuth();
 
   return (
-    <div className="flex flex-col h-full w-64 bg-dark-bg-card border-r border-cyan-40">
+    <div className="flex flex-col h-screen w-64 bg-dark-bg-card border-r border-cyan-40 sticky top-0">
       {/* Logo */}
       <div className="p-4 border-b border-cyan-40">
         <Link href="/dashboard" className="block">

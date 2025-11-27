@@ -1,14 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from "framer-motion"
 import { useCountUp } from "@/hooks/use-count-up"
 
-// Egress pricing per GB by cloud and region
-// Source: AWS, GCP, Azure official pricing pages
-const EGRESS_PRICING = {
+// Default pricing (used while loading and as fallback)
+const DEFAULT_PRICING = {
   AWS: {
     "us-east": 0.09,
     "eu-west": 0.09,
@@ -26,6 +25,14 @@ const EGRESS_PRICING = {
   },
 }
 
+interface PricingData {
+  AWS: Record<string, number>
+  GCP: Record<string, number>
+  Azure: Record<string, number>
+  lastUpdated?: string
+  source?: 'live' | 'fallback'
+}
+
 const REGIONS = {
   "us-east": "North America",
   "eu-west": "Europe",
@@ -40,12 +47,31 @@ const COMPRESSION_RATIOS = {
 
 export function Calculator() {
   const [dailyGB, setDailyGB] = useState(100)
-  const [sourceCloud, setSourceCloud] = useState<keyof typeof EGRESS_PRICING>("AWS")
+  const [sourceCloud, setSourceCloud] = useState<keyof typeof DEFAULT_PRICING>("AWS")
   const [region, setRegion] = useState<keyof typeof REGIONS>("us-east")
   const [dataPattern, setDataPattern] = useState<keyof typeof COMPRESSION_RATIOS>("mixed")
+  const [pricing, setPricing] = useState<PricingData>(DEFAULT_PRICING)
+  const [isLivePricing, setIsLivePricing] = useState(false)
+
+  // Fetch live pricing on mount
+  useEffect(() => {
+    async function fetchPricing() {
+      try {
+        const response = await fetch('/api/pricing')
+        if (response.ok) {
+          const data: PricingData = await response.json()
+          setPricing(data)
+          setIsLivePricing(data.source === 'live')
+        }
+      } catch (error) {
+        console.error('Failed to fetch pricing:', error)
+      }
+    }
+    fetchPricing()
+  }, [])
 
   const monthlyGB = dailyGB * 30
-  const pricePerGB = EGRESS_PRICING[sourceCloud][region]
+  const pricePerGB = pricing[sourceCloud]?.[region] ?? DEFAULT_PRICING[sourceCloud][region]
   const compressionRatio = COMPRESSION_RATIOS[dataPattern].ratio
 
   const currentMonthlyCost = monthlyGB * pricePerGB
@@ -131,7 +157,7 @@ export function Calculator() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <Label className="text-content-1 text-grey mb-3 block">Source cloud</Label>
-                  <Select value={sourceCloud} onValueChange={(v) => setSourceCloud(v as keyof typeof EGRESS_PRICING)}>
+                  <Select value={sourceCloud} onValueChange={(v) => setSourceCloud(v as keyof typeof DEFAULT_PRICING)}>
                     <SelectTrigger className="input-field w-full h-[44px] text-white [&>svg:last-child]:hidden">
                       <SelectValue />
                       <svg width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-auto">
@@ -210,7 +236,11 @@ export function Calculator() {
               </div>
 
               <p className="text-mini-3 text-grey mt-6 mb-10 w-full max-w-[480px]">
-                * Egress pricing: {sourceCloud} {REGIONS[region]} at ${pricePerGB}/GB. Actual prices may vary by specific region, volume tier, and commitment. Compression: 5x (JSON) to 150x (time-series).
+                * Egress pricing: {sourceCloud} {REGIONS[region]} at ${pricePerGB}/GB
+                {isLivePricing ? (
+                  <span className="text-cyan"> (live from API)</span>
+                ) : null}
+                . Prices from official {sourceCloud} pricing. May vary by volume tier and commitment.
               </p>
             </div>
           </div>
