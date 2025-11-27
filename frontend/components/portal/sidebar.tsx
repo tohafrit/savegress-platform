@@ -15,12 +15,14 @@ import {
   Database,
   Rocket,
   Book,
+  Sliders,
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
   { name: 'Connections', href: '/connections', icon: Database },
+  { name: 'Optimizer', href: '/optimizer', icon: Sliders },
   { name: 'Setup', href: '/setup', icon: Rocket },
   { name: 'Docs', href: '/docs', icon: Book },
   { name: 'Licenses', href: '/licenses', icon: Key },
