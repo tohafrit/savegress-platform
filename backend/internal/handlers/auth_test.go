@@ -218,7 +218,7 @@ func (h *testAuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) 
 			respondError(w, http.StatusBadRequest, "invalid or expired reset token")
 			return
 		}
-		if err == services.ErrTokenExpired {
+		if err == services.ErrResetTokenExpired {
 			respondError(w, http.StatusBadRequest, "password reset token has expired")
 			return
 		}
@@ -630,7 +630,7 @@ func TestAuthHandler_ResetPassword(t *testing.T) {
 				"password": "newpassword123",
 			},
 			mockResetPassword: func(ctx context.Context, token, newPassword string) error {
-				return services.ErrTokenExpired
+				return services.ErrResetTokenExpired
 			},
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "password reset token has expired",

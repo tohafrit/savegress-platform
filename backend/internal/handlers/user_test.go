@@ -20,11 +20,12 @@ import (
 
 // MockUserService implements a mock for testing
 type MockUserService struct {
-	GetByIDFunc        func(ctx context.Context, id uuid.UUID) (*models.User, error)
-	UpdateProfileFunc  func(ctx context.Context, userID uuid.UUID, name, company string) error
-	ChangePasswordFunc func(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error
-	ListUsersFunc      func(ctx context.Context, limit, offset int) ([]models.User, int, error)
-	UpdateUserRoleFunc func(ctx context.Context, userID uuid.UUID, role string) error
+	GetByIDFunc             func(ctx context.Context, id uuid.UUID) (*models.User, error)
+	UpdateProfileFunc       func(ctx context.Context, userID uuid.UUID, name, company string) error
+	ChangePasswordFunc      func(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error
+	ListUsersFunc           func(ctx context.Context, limit, offset int) ([]models.User, int, error)
+	UpdateUserRoleFunc      func(ctx context.Context, userID uuid.UUID, role string) error
+	SetStripeCustomerIDFunc func(ctx context.Context, userID uuid.UUID, stripeCustomerID string) error
 }
 
 func (m *MockUserService) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
@@ -58,6 +59,13 @@ func (m *MockUserService) ListUsers(ctx context.Context, limit, offset int) ([]m
 func (m *MockUserService) UpdateUserRole(ctx context.Context, userID uuid.UUID, role string) error {
 	if m.UpdateUserRoleFunc != nil {
 		return m.UpdateUserRoleFunc(ctx, userID, role)
+	}
+	return nil
+}
+
+func (m *MockUserService) SetStripeCustomerID(ctx context.Context, userID uuid.UUID, stripeCustomerID string) error {
+	if m.SetStripeCustomerIDFunc != nil {
+		return m.SetStripeCustomerIDFunc(ctx, userID, stripeCustomerID)
 	}
 	return nil
 }
