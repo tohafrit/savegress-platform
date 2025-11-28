@@ -39,8 +39,8 @@ const navigationGroups: NavGroup[] = [
     icon: Activity,
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
       { name: 'Connections', href: '/connections', icon: Database },
+      { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
     ],
   },
   {
@@ -67,8 +67,8 @@ const navigationGroups: NavGroup[] = [
 // Flat list for mobile nav (first 5 most important)
 const mobileNavItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
   { name: 'Connections', href: '/connections', icon: Database },
+  { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
   { name: 'Setup', href: '/setup', icon: Rocket },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
