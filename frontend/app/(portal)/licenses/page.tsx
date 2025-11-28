@@ -263,7 +263,7 @@ export default function LicensesPage() {
 
 function NoLicenseState() {
   return (
-    <div className="card-dark p-12 text-center">
+    <div className="card-dark overflow-visible p-12 text-center">
       <div className="w-20 h-20 rounded-full bg-primary-dark flex items-center justify-center mx-auto mb-6">
         <Key className="w-10 h-10 text-grey" />
       </div>
@@ -272,7 +272,7 @@ function NoLicenseState() {
         Choose a plan to get your license key and start using Savegress CDC Engine.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-8 pt-2">
         {/* Community */}
         <div className="card-dark p-6 border-grey/30">
           <h4 className="text-lg font-semibold text-white mb-2">Community</h4>
@@ -297,7 +297,7 @@ function NoLicenseState() {
         </div>
 
         {/* Pro */}
-        <div className="card-dark p-6 border-accent-cyan relative">
+        <div className="card-dark p-6 pt-8 border-accent-cyan relative overflow-visible">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <span className="px-3 py-1 bg-accent-cyan text-white text-xs font-medium rounded-full">
               Popular
