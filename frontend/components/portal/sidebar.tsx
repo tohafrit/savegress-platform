@@ -16,18 +16,60 @@ import {
   Rocket,
   Book,
   Sliders,
+  Activity,
+  BookOpen,
+  User,
 } from 'lucide-react';
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface NavGroup {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: NavItem[];
+}
+
+const navigationGroups: NavGroup[] = [
+  {
+    title: 'CDC',
+    icon: Activity,
+    items: [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
+      { name: 'Connections', href: '/connections', icon: Database },
+    ],
+  },
+  {
+    title: 'Getting Started',
+    icon: BookOpen,
+    items: [
+      { name: 'Setup', href: '/setup', icon: Rocket },
+      { name: 'Optimizer', href: '/optimizer', icon: Sliders },
+      { name: 'Docs', href: '/docs', icon: Book },
+    ],
+  },
+  {
+    title: 'Account',
+    icon: User,
+    items: [
+      { name: 'Licenses', href: '/licenses', icon: Key },
+      { name: 'Downloads', href: '/downloads', icon: Download },
+      { name: 'Billing', href: '/billing', icon: CreditCard },
+      { name: 'Settings', href: '/settings', icon: Settings },
+    ],
+  },
+];
+
+// Flat list for mobile nav (first 5 most important)
+const mobileNavItems: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Pipelines', href: '/pipelines', icon: GitBranch },
   { name: 'Connections', href: '/connections', icon: Database },
-  { name: 'Optimizer', href: '/optimizer', icon: Sliders },
   { name: 'Setup', href: '/setup', icon: Rocket },
-  { name: 'Docs', href: '/docs', icon: Book },
-  { name: 'Licenses', href: '/licenses', icon: Key },
-  { name: 'Downloads', href: '/downloads', icon: Download },
-  { name: 'Billing', href: '/billing', icon: CreditCard },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -50,25 +92,40 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-gradient-btn-primary text-white shadow-glow-blue'
-                  : 'text-grey hover:text-white hover:bg-primary-dark'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.name}
-            </Link>
-          );
-        })}
+      {/* Navigation Groups */}
+      <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+        {navigationGroups.map((group) => (
+          <div key={group.title}>
+            {/* Group Header */}
+            <div className="flex items-center gap-2 px-3 mb-2">
+              <group.icon className="w-4 h-4 text-cyan-40" />
+              <span className="text-xs font-semibold text-cyan-40 uppercase tracking-wider">
+                {group.title}
+              </span>
+            </div>
+
+            {/* Group Items */}
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-gradient-btn-primary text-white shadow-glow-blue'
+                        : 'text-grey hover:text-white hover:bg-primary-dark'
+                    }`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* User menu */}
@@ -96,13 +153,12 @@ export function Sidebar() {
 
 export function MobileNav() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
 
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-dark-bg-card border-t border-cyan-40 z-50">
       <nav className="flex justify-around p-2">
-        {navigation.slice(0, 5).map((item) => {
-          const isActive = pathname === item.href;
+        {mobileNavItems.map((item) => {
+          const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
           return (
             <Link
               key={item.name}
