@@ -140,13 +140,13 @@ class ApiClient {
 
   // Billing
   async getSubscription() {
-    return this.request<Subscription>('/billing/subscription');
+    return this.request<{ subscription: Subscription | null }>('/billing/subscription');
   }
 
-  async createSubscription(priceId: string, paymentMethodId?: string) {
-    return this.request<{ subscription: Subscription; client_secret?: string }>('/billing/subscription', {
+  async createSubscription(plan: string, successUrl: string, cancelUrl: string) {
+    return this.request<{ checkout_url: string }>('/billing/subscription', {
       method: 'POST',
-      body: JSON.stringify({ price_id: priceId, payment_method_id: paymentMethodId }),
+      body: JSON.stringify({ plan, success_url: successUrl, cancel_url: cancelUrl }),
     });
   }
 
@@ -184,9 +184,9 @@ class ApiClient {
     return this.request<{ downloads: Download[] }>('/downloads');
   }
 
-  async getDownloadURL(product: string, version: string, platform?: string) {
-    const params = platform ? `?platform=${platform}` : '';
-    return this.request<{ url: string; expires_in: string }>(`/downloads/${product}/${version}${params}`);
+  async getDownloadURL(product: string, version: string, platform: string, edition: string) {
+    // Use personalized download endpoint that embeds license key
+    return this.request<{ url: string; expires_in: number }>(`/downloads/personalized/${product}/${version}/${platform}/${edition}`);
   }
 
   // Connections
@@ -310,6 +310,10 @@ export interface License {
   status: 'active' | 'expired' | 'revoked';
   max_instances: number;
   active_instances: number;
+  max_sources: number;
+  max_tables: number;
+  max_throughput: number;
+  features: string[];
   expires_at: string;
   created_at: string;
 }

@@ -45,9 +45,11 @@ type Config struct {
 	// Downloads / S3
 	DownloadsBucket    string
 	DownloadsRegion    string
+	DownloadsKeyPrefix string
 	S3Endpoint         string // For MinIO or S3-compatible storage
 	S3AccessKeyID      string
 	S3SecretAccessKey  string
+	S3UsePathStyle     bool // Use path-style addressing (for MinIO)
 
 	// Turnstile (Cloudflare)
 	TurnstileSecretKey string
@@ -87,9 +89,11 @@ func Load() (*Config, error) {
 		SMTPFrom:           getEnv("SMTP_FROM", "noreply@savegress.io"),
 		DownloadsBucket:    getEnv("DOWNLOADS_BUCKET", "savegress-releases"),
 		DownloadsRegion:    getEnv("DOWNLOADS_REGION", "eu-central-1"),
+		DownloadsKeyPrefix: getEnv("DOWNLOADS_KEY_PREFIX", "releases/"),
 		S3Endpoint:         getEnv("S3_ENDPOINT", ""), // Empty for AWS S3, set for MinIO
 		S3AccessKeyID:      getEnv("S3_ACCESS_KEY_ID", ""),
 		S3SecretAccessKey:  getEnv("S3_SECRET_ACCESS_KEY", ""),
+		S3UsePathStyle:     getEnv("S3_USE_PATH_STYLE", "") == "true",
 		TurnstileSecretKey: getEnv("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA"), // Test key
 		AdminEmail:         getEnv("ADMIN_EMAIL", ""),
 		ResendAPIKey:       getEnv("RESEND_API_KEY", ""),

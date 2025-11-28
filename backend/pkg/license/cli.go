@@ -389,3 +389,193 @@ func (c *CLI) GenerateHardwareIDCommand() error {
 	fmt.Println("Hardware ID:", hwID)
 	return nil
 }
+
+// ============================================
+// AUTO-LOGIN FLOW
+// ============================================
+// These methods allow users to login with email/password
+// and automatically retrieve their license key.
+
+// Login authenticates with email/password and retrieves license
+func (c *CLI) Login(email, password string) error {
+	client := NewLicenseClient(c.licenseServer)
+
+	fmt.Printf("Logging in as %s...\n", email)
+
+	// Authenticate and get license
+	resp, err := client.Login(email, password)
+	if err != nil {
+		return fmt.Errorf("login failed: %w", err)
+	}
+
+	if resp.LicenseKey == "" {
+		return fmt.Errorf("no active license found for this account. Please subscribe at https://savegress.io/billing")
+	}
+
+	// Save license key to config file
+	if err := c.saveLicenseKey(resp.LicenseKey); err != nil {
+		return fmt.Errorf("failed to save license: %w", err)
+	}
+
+	// Load the license
+	if err := c.manager.LoadFromKey(LicenseKey(resp.LicenseKey)); err != nil {
+		return fmt.Errorf("invalid license received: %w", err)
+	}
+
+	license := c.manager.GetLicense()
+	c.printSuccess(fmt.Sprintf("Logged in successfully! License: %s (%s)", license.Tier, license.CustomerName))
+
+	return nil
+}
+
+// LoginInteractive prompts for email and password interactively
+func (c *CLI) LoginInteractive() error {
+	fmt.Println("")
+	fmt.Println("┌─────────────────────────────────────────────────────────┐")
+	fmt.Println("│              SAVEGRESS LICENSE LOGIN                    │")
+	fmt.Println("└─────────────────────────────────────────────────────────┘")
+	fmt.Println("")
+	fmt.Println("No license key found. Please login with your Savegress account")
+	fmt.Println("to retrieve your license automatically.")
+	fmt.Println("")
+	fmt.Println("Don't have an account? Sign up at https://savegress.io/register")
+	fmt.Println("")
+
+	// Read email
+	fmt.Print("Email: ")
+	var email string
+	fmt.Scanln(&email)
+
+	if email == "" {
+		return fmt.Errorf("email is required")
+	}
+
+	// Read password (Note: In production, use terminal.ReadPassword for hidden input)
+	fmt.Print("Password: ")
+	var password string
+	fmt.Scanln(&password)
+
+	if password == "" {
+		return fmt.Errorf("password is required")
+	}
+
+	return c.Login(email, password)
+}
+
+// Logout removes the saved license key
+func (c *CLI) Logout() error {
+	configPath := c.getLicenseConfigPath()
+
+	if err := os.Remove(configPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove license file: %w", err)
+	}
+
+	c.printSuccess("Logged out successfully. License key removed.")
+	return nil
+}
+
+// CheckOrPromptLogin checks if license exists, prompts login if not
+func (c *CLI) CheckOrPromptLogin() error {
+	// Try to load from embedded key first
+	embeddedKey := c.getEmbeddedLicenseKey()
+	if embeddedKey != "" {
+		if err := c.manager.LoadFromKey(LicenseKey(embeddedKey)); err == nil {
+			return nil // Embedded license is valid
+		}
+	}
+
+	// Try to load from config file
+	configPath := c.getLicenseConfigPath()
+	if err := c.manager.LoadFromFile(configPath); err == nil {
+		return nil // Saved license is valid
+	}
+
+	// Try to load from environment variable
+	if err := c.manager.LoadFromEnv("SAVEGRESS_LICENSE_KEY"); err == nil {
+		return nil // ENV license is valid
+	}
+
+	// No license found - prompt for login
+	fmt.Println("")
+	fmt.Println("⚠️  No license key found.")
+	fmt.Println("")
+	fmt.Println("Options:")
+	fmt.Println("  1. Run 'cdc-engine license login' to login with your account")
+	fmt.Println("  2. Set SAVEGRESS_LICENSE_KEY environment variable")
+	fmt.Println("  3. Download a personalized binary from https://savegress.io/downloads")
+	fmt.Println("")
+	fmt.Println("Running in Community mode with limited features...")
+	fmt.Println("")
+
+	return nil // Allow running in community mode
+}
+
+// saveLicenseKey saves the license key to config file
+func (c *CLI) saveLicenseKey(key string) error {
+	configPath := c.getLicenseConfigPath()
+
+	// Create config directory if it doesn't exist
+	configDir := c.getConfigDir()
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		return fmt.Errorf("failed to create config directory: %w", err)
+	}
+
+	// Write license key with restricted permissions
+	if err := os.WriteFile(configPath, []byte(key), 0600); err != nil {
+		return fmt.Errorf("failed to write license file: %w", err)
+	}
+
+	return nil
+}
+
+// getLicenseConfigPath returns the path to the license config file
+func (c *CLI) getLicenseConfigPath() string {
+	return c.getConfigDir() + "/license.key"
+}
+
+// getConfigDir returns the config directory path
+func (c *CLI) getConfigDir() string {
+	// Use XDG config dir on Linux, or home dir on other platforms
+	if configDir := os.Getenv("XDG_CONFIG_HOME"); configDir != "" {
+		return configDir + "/savegress"
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "/tmp/savegress"
+	}
+
+	switch runtime.GOOS {
+	case "darwin":
+		return homeDir + "/Library/Application Support/Savegress"
+	case "windows":
+		if appData := os.Getenv("APPDATA"); appData != "" {
+			return appData + "\\Savegress"
+		}
+		return homeDir + "\\.savegress"
+	default:
+		return homeDir + "/.config/savegress"
+	}
+}
+
+// getEmbeddedLicenseKey returns the embedded license key (replaced at download time)
+func (c *CLI) getEmbeddedLicenseKey() string {
+	// This placeholder is replaced with the actual license key when downloading
+	// from the portal. The key is exactly 512 bytes to allow binary replacement.
+	const embeddedKey = "SAVEGRESS_LICENSE_PLACEHOLDER_" +
+		"0000000000000000000000000000000000000000000000000000000000000000" +
+		"0000000000000000000000000000000000000000000000000000000000000000" +
+		"0000000000000000000000000000000000000000000000000000000000000000" +
+		"0000000000000000000000000000000000000000000000000000000000000000" +
+		"0000000000000000000000000000000000000000000000000000000000000000" +
+		"0000000000000000000000000000000000000000000000000000000000000000" +
+		"0000000000000000000000000000000000000000000000000"
+
+	// Check if placeholder was replaced with actual key
+	if strings.HasPrefix(embeddedKey, "SAVEGRESS_LICENSE_PLACEHOLDER_") {
+		return "" // Still placeholder, no embedded key
+	}
+
+	// Trim null padding from the key
+	return strings.TrimRight(embeddedKey, "\x00")
+}

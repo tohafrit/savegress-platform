@@ -502,13 +502,63 @@ func (h *BillingHandler) handleCheckoutCompleted(ctx context.Context, event *str
 		return
 	}
 
-	// Create a license for this subscription
-	_, err = h.licenseService.CreateLicense(ctx, userID, plan, 365, "")
+	// Upgrade existing license or create new one
+	// First, try to revoke any existing community license
+	existingLicenses, err := h.licenseService.GetUserLicenses(ctx, userID)
+	if err == nil {
+		for _, lic := range existingLicenses {
+			if lic.Status == "active" && lic.Tier == "community" {
+				// Revoke community license when upgrading
+				_ = h.licenseService.RevokeLicense(ctx, lic.ID)
+				log.Printf("Revoked community license %s for user %s (upgrading to %s)", lic.ID, userID, plan)
+			}
+		}
+	}
+
+	// Create new license for this subscription
+	newLicense, err := h.licenseService.CreateLicense(ctx, userID, plan, 365, "")
 	if err != nil {
 		log.Printf("Error creating license: %v", err)
 	}
 
 	log.Printf("Checkout completed for user %s, plan: %s", userID, plan)
+
+	// Send purchase confirmation email
+	if h.emailService != nil && newLicense != nil {
+		user, err := h.userService.GetByID(ctx, userID)
+		if err == nil {
+			// Determine plan display name and amount
+			planName := "Pro"
+			amount := "$99.00"
+			if plan == "enterprise" {
+				planName = "Enterprise"
+				amount = "$499.00"
+			}
+
+			// Get invoice URL if available
+			var invoiceURL string
+			if session.Invoice != nil {
+				invoiceURL = session.Invoice.HostedInvoiceURL
+			}
+
+			purchaseInfo := services.LicensePurchaseInfo{
+				UserName:        user.Name,
+				Email:           user.Email,
+				Plan:            planName,
+				LicenseKey:      newLicense.LicenseKey,
+				Amount:          amount,
+				BillingPeriod:   "month",
+				NextBillingDate: time.Unix(session.Subscription.CurrentPeriodEnd, 0),
+				InvoiceURL:      invoiceURL,
+			}
+
+			if err := h.emailService.SendLicensePurchaseEmail(ctx, purchaseInfo); err != nil {
+				log.Printf("Error sending license purchase email: %v", err)
+			} else {
+				log.Printf("Sent license purchase confirmation email to %s", user.Email)
+			}
+		}
+	}
 }
 
 func (h *BillingHandler) handleSubscriptionUpdated(ctx context.Context, event *stripe.Event) {
@@ -545,12 +595,34 @@ func (h *BillingHandler) handleSubscriptionDeleted(ctx context.Context, event *s
 		log.Printf("Error deleting subscription: %v", err)
 	}
 
-	// Find user and send notification
+	// Find user and downgrade to community
 	if sub.Customer != nil {
 		user, err := h.billingService.GetUserByStripeCustomerID(ctx, sub.Customer.ID)
-		if err == nil && h.emailService != nil {
-			periodEnd := time.Unix(sub.CurrentPeriodEnd, 0)
-			_ = h.emailService.SendSubscriptionCanceledEmail(ctx, user.Email, user.Name, periodEnd)
+		if err == nil {
+			// Revoke paid license and create community license
+			existingLicenses, err := h.licenseService.GetUserLicenses(ctx, user.ID)
+			if err == nil {
+				for _, lic := range existingLicenses {
+					if lic.Status == "active" && (lic.Tier == "pro" || lic.Tier == "enterprise") {
+						_ = h.licenseService.RevokeLicense(ctx, lic.ID)
+						log.Printf("Revoked %s license %s for user %s (subscription canceled)", lic.Tier, lic.ID, user.ID)
+					}
+				}
+			}
+
+			// Create new community license
+			_, err = h.licenseService.CreateLicense(ctx, user.ID, "community", 365, "")
+			if err != nil {
+				log.Printf("Error creating community license after cancellation: %v", err)
+			} else {
+				log.Printf("Created community license for user %s after subscription cancellation", user.ID)
+			}
+
+			// Send notification
+			if h.emailService != nil {
+				periodEnd := time.Unix(sub.CurrentPeriodEnd, 0)
+				_ = h.emailService.SendSubscriptionCanceledEmail(ctx, user.Email, user.Name, periodEnd)
+			}
 		}
 	}
 

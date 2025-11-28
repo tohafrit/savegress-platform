@@ -264,6 +264,210 @@ Savegress CDC Platform
 	return s.provider.Send(ctx, to, subject, htmlBody, textBody)
 }
 
+// LicensePurchaseInfo contains information about a purchased license
+type LicensePurchaseInfo struct {
+	UserName       string
+	Email          string
+	Plan           string    // "Pro" or "Enterprise"
+	LicenseKey     string
+	Amount         string    // e.g., "$99.00"
+	BillingPeriod  string    // "monthly" or "yearly"
+	NextBillingDate time.Time
+	InvoiceURL     string
+}
+
+// SendLicensePurchaseEmail sends a confirmation email after successful license purchase
+func (s *EmailService) SendLicensePurchaseEmail(ctx context.Context, info LicensePurchaseInfo) error {
+	subject := fmt.Sprintf("Your Savegress %s License is Active", info.Plan)
+
+	// Mask the license key for display (show first 8 and last 4 chars)
+	maskedKey := info.LicenseKey
+	if len(maskedKey) > 16 {
+		maskedKey = maskedKey[:8] + "..." + maskedKey[len(maskedKey)-4:]
+	}
+
+	// Features based on plan
+	var features string
+	if info.Plan == "Enterprise" {
+		features = `
+            <li>✓ All Pro features included</li>
+            <li>✓ Oracle CDC connector</li>
+            <li>✓ High Availability cluster mode</li>
+            <li>✓ SSO / SAML authentication</li>
+            <li>✓ Audit logging & compliance</li>
+            <li>✓ Priority support with SLA</li>
+            <li>✓ Unlimited sources & tables</li>`
+	} else {
+		features = `
+            <li>✓ All Community features included</li>
+            <li>✓ MongoDB CDC connector</li>
+            <li>✓ SQL Server CDC connector</li>
+            <li>✓ Apache Kafka output</li>
+            <li>✓ Advanced compression (Zstd, LZ4)</li>
+            <li>✓ Up to 10 sources, 100 tables</li>
+            <li>✓ Email support</li>`
+	}
+
+	htmlBody := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 0;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #0066cc 0%%, #004499 100%%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">Savegress</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">CDC Platform</p>
+        </div>
+
+        <!-- Main Content -->
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <!-- Success Badge -->
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="display: inline-block; background-color: #e8f5e9; border-radius: 50px; padding: 10px 25px;">
+                    <span style="color: #2e7d32; font-weight: 600;">✓ Payment Successful</span>
+                </div>
+            </div>
+
+            <h2 style="color: #333; margin-top: 0;">Thank you for your purchase, %s!</h2>
+
+            <p>Your <strong>Savegress %s</strong> license is now active. Here are your license details:</p>
+
+            <!-- License Details Box -->
+            <div style="background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                <table style="width: 100%%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">Plan:</td>
+                        <td style="padding: 8px 0; font-weight: 600; text-align: right;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">Amount:</td>
+                        <td style="padding: 8px 0; font-weight: 600; text-align: right;">%s / %s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">License Key:</td>
+                        <td style="padding: 8px 0; font-family: monospace; font-size: 13px; text-align: right;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px 0; color: #666;">Next Billing:</td>
+                        <td style="padding: 8px 0; text-align: right;">%s</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Features -->
+            <h3 style="color: #333; margin-bottom: 10px;">What's Included:</h3>
+            <ul style="color: #555; padding-left: 20px;">
+                %s
+            </ul>
+
+            <!-- CTA Buttons -->
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="%s/downloads" style="background-color: #0066cc; color: white; padding: 14px 35px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; margin: 5px;">Download Software</a>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <a href="%s/docs" style="color: #0066cc; text-decoration: none; margin: 0 15px;">Documentation</a>
+                <span style="color: #ccc;">|</span>
+                <a href="%s/licenses" style="color: #0066cc; text-decoration: none; margin: 0 15px;">Manage License</a>
+                <span style="color: #ccc;">|</span>
+                <a href="%s/billing" style="color: #0066cc; text-decoration: none; margin: 0 15px;">Billing</a>
+            </div>
+
+            <!-- Quick Start -->
+            <div style="background-color: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;">
+                <strong style="color: #e65100;">Quick Start:</strong>
+                <p style="margin: 10px 0 0 0; color: #666;">Your license is automatically embedded when you download from the portal. Just download and run!</p>
+            </div>
+
+            <!-- Invoice Link -->
+            %s
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
+            <p>© %d Savegress. All rights reserved.</p>
+            <p>This is an official receipt for your records.</p>
+            <p style="margin-top: 15px;">
+                <a href="mailto:support@savegress.io" style="color: #666;">support@savegress.io</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+`,
+		template.HTMLEscapeString(info.UserName),
+		info.Plan,
+		info.Plan,
+		info.Amount,
+		info.BillingPeriod,
+		maskedKey,
+		info.NextBillingDate.Format("January 2, 2006"),
+		features,
+		s.baseURL,
+		s.baseURL,
+		s.baseURL,
+		s.baseURL,
+		s.invoiceLinkHTML(info.InvoiceURL),
+		time.Now().Year(),
+	)
+
+	textBody := fmt.Sprintf(`Thank you for your purchase, %s!
+
+Your Savegress %s license is now active.
+
+LICENSE DETAILS
+===============
+Plan: %s
+Amount: %s / %s
+License Key: %s
+Next Billing: %s
+
+QUICK START
+===========
+Your license is automatically embedded when you download from the portal.
+Just download and run - no manual configuration needed!
+
+Download: %s/downloads
+Documentation: %s/docs
+Manage License: %s/licenses
+
+---
+© %d Savegress. All rights reserved.
+This is an official receipt for your records.
+
+Questions? Contact support@savegress.io
+`,
+		info.UserName,
+		info.Plan,
+		info.Plan,
+		info.Amount,
+		info.BillingPeriod,
+		maskedKey,
+		info.NextBillingDate.Format("January 2, 2006"),
+		s.baseURL,
+		s.baseURL,
+		s.baseURL,
+		time.Now().Year(),
+	)
+
+	return s.provider.Send(ctx, info.Email, subject, htmlBody, textBody)
+}
+
+// invoiceLinkHTML returns HTML for invoice link if URL is provided
+func (s *EmailService) invoiceLinkHTML(invoiceURL string) string {
+	if invoiceURL == "" {
+		return ""
+	}
+	return fmt.Sprintf(`
+            <p style="text-align: center; margin-top: 20px;">
+                <a href="%s" style="color: #666; text-decoration: none; font-size: 14px;">📄 View/Download Invoice</a>
+            </p>`, invoiceURL)
+}
+
 // SendSubscriptionCanceledEmail notifies user of subscription cancellation
 func (s *EmailService) SendSubscriptionCanceledEmail(ctx context.Context, to, name string, endDate time.Time) error {
 	subject := "Your Savegress Subscription Has Been Canceled"

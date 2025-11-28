@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
   Book, Database, Settings, Terminal, Server,
   FileCode, Zap, Shield, Box, ChevronRight,
-  Copy, Check, Play, Pause, RefreshCw
+  Copy, Check, Play, Pause, RefreshCw, Layers
 } from 'lucide-react';
 
 // Code block component with copy button
@@ -119,6 +119,7 @@ function DatabaseCard({
 // Navigation items
 const navItems = [
   { id: 'quick-start', label: 'Quick Start', icon: Zap },
+  { id: 'modes', label: 'Operation Modes', icon: Layers },
   { id: 'installation', label: 'Installation', icon: Box },
   { id: 'configuration', label: 'Configuration', icon: Settings },
   { id: 'databases', label: 'Databases', icon: Database },
@@ -168,7 +169,7 @@ export default function DocsPage() {
         <div>
           <h1 className="text-h3 text-white mb-4">Savegress CDC Engine</h1>
           <p className="text-content-1 text-grey">
-            Complete documentation for setting up and using the CDC engine for real-time data replication.
+            Complete documentation for setting up and using the CDC engine for data migration and real-time replication.
           </p>
         </div>
 
@@ -237,6 +238,128 @@ checkpoint:
   type: file
   path: ./checkpoints`} />
             <CodeBlock code={`./cdc-engine --config config.yaml`} />
+          </Subsection>
+        </Section>
+
+        {/* Operation Modes */}
+        <Section id="modes" title="Operation Modes" icon={Layers}>
+          <p className="text-content-1 text-grey">
+            Savegress supports three operation modes depending on your use case: migration, replication, or both.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+            <div className="card-dark p-6 border-purple-500/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-purple-500/10">
+                  <RefreshCw className="w-5 h-5 text-purple-400" />
+                </div>
+                <h4 className="text-h5 text-white">Migration Only</h4>
+              </div>
+              <p className="text-content-2 text-grey mb-4">
+                One-time data transfer from source to target. Engine stops after snapshot completion.
+              </p>
+              <ul className="text-sm text-grey space-y-1">
+                <li>• Initial data load</li>
+                <li>• Database migrations</li>
+                <li>• Data warehouse seeding</li>
+              </ul>
+            </div>
+
+            <div className="card-dark p-6 border-accent-cyan/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-accent-cyan/10">
+                  <Play className="w-5 h-5 text-accent-cyan" />
+                </div>
+                <h4 className="text-h5 text-white">Replication Only</h4>
+              </div>
+              <p className="text-content-2 text-grey mb-4">
+                Continuous streaming of changes without initial snapshot. Start from specific position.
+              </p>
+              <ul className="text-sm text-grey space-y-1">
+                <li>• Real-time sync</li>
+                <li>• Event streaming</li>
+                <li>• Resume from checkpoint</li>
+              </ul>
+            </div>
+
+            <div className="card-dark p-6 border-green-500/30">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-green-500/10">
+                  <Layers className="w-5 h-5 text-green-400" />
+                </div>
+                <h4 className="text-h5 text-white">Migration + Replication</h4>
+              </div>
+              <p className="text-content-2 text-grey mb-4">
+                Full snapshot followed by continuous replication. Best for complete data sync.
+              </p>
+              <ul className="text-sm text-grey space-y-1">
+                <li>• Zero-downtime migration</li>
+                <li>• Full data consistency</li>
+                <li>• Recommended approach</li>
+              </ul>
+            </div>
+          </div>
+
+          <Subsection title="Configuration Examples">
+            <p className="text-content-1 text-grey mb-3">
+              <strong>Migration Only</strong> — snapshot then exit:
+            </p>
+            <CodeBlock language="yaml" code={`snapshot:
+  enabled: true
+  exit_after: true    # Stop after snapshot completes
+
+# No streaming after snapshot`} />
+
+            <p className="text-content-1 text-grey mb-3 mt-6">
+              <strong>Replication Only</strong> — skip snapshot, stream changes:
+            </p>
+            <CodeBlock language="yaml" code={`snapshot:
+  enabled: false      # Skip initial snapshot
+
+source:
+  options:
+    start_lsn: "0/16B3748"  # Start from specific position`} />
+
+            <p className="text-content-1 text-grey mb-3 mt-6">
+              <strong>Migration + Replication</strong> — full sync (default):
+            </p>
+            <CodeBlock language="yaml" code={`snapshot:
+  enabled: true       # Perform initial snapshot
+  exit_after: false   # Continue with streaming (default)
+  parallel_workers: 4
+  batch_size: 10000
+
+# After snapshot, automatically switches to streaming mode`} />
+          </Subsection>
+
+          <Subsection title="How It Works">
+            <div className="bg-primary-dark/50 rounded-lg p-6 border border-cyan-40/30">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                <div className="flex-1 text-center p-4">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-2">
+                    <span className="text-purple-400 font-bold">1</span>
+                  </div>
+                  <p className="text-sm text-white font-medium">Snapshot</p>
+                  <p className="text-xs text-grey">Read existing data</p>
+                </div>
+                <div className="hidden md:block text-grey">→</div>
+                <div className="flex-1 text-center p-4">
+                  <div className="w-12 h-12 rounded-full bg-accent-cyan/20 flex items-center justify-center mx-auto mb-2">
+                    <span className="text-accent-cyan font-bold">2</span>
+                  </div>
+                  <p className="text-sm text-white font-medium">Checkpoint</p>
+                  <p className="text-xs text-grey">Save position</p>
+                </div>
+                <div className="hidden md:block text-grey">→</div>
+                <div className="flex-1 text-center p-4">
+                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-2">
+                    <span className="text-green-400 font-bold">3</span>
+                  </div>
+                  <p className="text-sm text-white font-medium">Streaming</p>
+                  <p className="text-xs text-grey">Real-time changes</p>
+                </div>
+              </div>
+            </div>
           </Subsection>
         </Section>
 

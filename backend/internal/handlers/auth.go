@@ -10,8 +10,9 @@ import (
 
 // AuthHandler handles authentication endpoints
 type AuthHandler struct {
-	authService  *services.AuthService
-	emailService *services.EmailService
+	authService    *services.AuthService
+	emailService   *services.EmailService
+	licenseService *services.LicenseService
 }
 
 // NewAuthHandler creates a new auth handler
@@ -20,6 +21,11 @@ func NewAuthHandler(authService *services.AuthService, emailService *services.Em
 		authService:  authService,
 		emailService: emailService,
 	}
+}
+
+// SetLicenseService sets the license service for CLI login
+func (h *AuthHandler) SetLicenseService(licenseService *services.LicenseService) {
+	h.licenseService = licenseService
 }
 
 type registerRequest struct {
@@ -200,5 +206,59 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 
 	respondSuccess(w, map[string]string{
 		"message": "password has been reset successfully",
+	})
+}
+
+// CLILogin handles login from CLI and returns the user's license key
+func (h *AuthHandler) CLILogin(w http.ResponseWriter, r *http.Request) {
+	var req loginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.Email == "" || req.Password == "" {
+		respondError(w, http.StatusBadRequest, "email and password are required")
+		return
+	}
+
+	user, tokens, err := h.authService.Login(r.Context(), req.Email, req.Password)
+	if err != nil {
+		if err == services.ErrInvalidCredentials {
+			respondError(w, http.StatusUnauthorized, "invalid email or password")
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "login failed")
+		return
+	}
+
+	// Get user's active license
+	var licenseKey string
+	var edition string
+
+	if h.licenseService != nil {
+		licenses, err := h.licenseService.GetUserLicenses(r.Context(), user.ID)
+		if err == nil {
+			for _, lic := range licenses {
+				if lic.Status == "active" {
+					licenseKey = lic.LicenseKey
+					edition = lic.Tier
+					break
+				}
+			}
+		}
+	}
+
+	if licenseKey == "" {
+		respondError(w, http.StatusForbidden, "no active license found - please subscribe at https://savegress.io")
+		return
+	}
+
+	respondSuccess(w, map[string]interface{}{
+		"success":     true,
+		"license_key": licenseKey,
+		"edition":     edition,
+		"token":       tokens.AccessToken,
+		"message":     "Login successful",
 	})
 }

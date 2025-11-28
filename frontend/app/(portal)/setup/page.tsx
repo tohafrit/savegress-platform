@@ -27,7 +27,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
-type Step = 'method' | 'source' | 'deploy';
+type Step = 'choose' | 'method' | 'source' | 'deploy';
 
 const INSTALLATION_METHODS = [
   {
@@ -65,7 +65,7 @@ const INSTALLATION_METHODS = [
 ];
 
 export default function SetupPage() {
-  const [step, setStep] = useState<Step>('method');
+  const [step, setStep] = useState<Step>('choose');
   const [method, setMethod] = useState('docker-compose');
   const [pipelines, setPipelines] = useState<Pipeline[]>([]);
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
@@ -122,6 +122,103 @@ export default function SetupPage() {
     return <SetupSkeleton />;
   }
 
+  // Initial choice screen
+  if (step === 'choose') {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Get Started"
+          description="Choose how you'd like to set up Savegress CDC Engine"
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Wizard Option */}
+          <button
+            onClick={() => setStep('method')}
+            className="card-dark p-8 text-left hover:border-accent-cyan transition-all group"
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-btn-primary flex items-center justify-center group-hover:shadow-glow-blue transition-shadow">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Quick Setup Wizard</h3>
+                <p className="text-grey text-sm">
+                  Step-by-step guided setup through our web interface.
+                  Perfect for getting started quickly.
+                </p>
+              </div>
+              <ul className="text-sm text-grey space-y-2 text-left w-full">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  Interactive configuration builder
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  Auto-generated config files
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  Best for beginners
+                </li>
+              </ul>
+              <div className="flex items-center gap-2 text-accent-cyan font-medium">
+                Start Wizard
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </button>
+
+          {/* Manual Option */}
+          <Link
+            href="/docs#installation"
+            className="card-dark p-8 text-left hover:border-accent-cyan transition-all group"
+          >
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-primary-dark border border-cyan-40 flex items-center justify-center group-hover:border-accent-cyan transition-colors">
+                <Terminal className="w-8 h-8 text-accent-cyan" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-white mb-2">Manual Setup</h3>
+                <p className="text-grey text-sm">
+                  Follow detailed documentation to configure via CLI,
+                  Docker, or Kubernetes manually.
+                </p>
+              </div>
+              <ul className="text-sm text-grey space-y-2 text-left w-full">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  Full control over configuration
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  CI/CD integration examples
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-green-400" />
+                  Best for DevOps teams
+                </li>
+              </ul>
+              <div className="flex items-center gap-2 text-accent-cyan font-medium">
+                View Documentation
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Additional help */}
+        <InfoBanner
+          type="tip"
+          title="Not sure which to choose?"
+          action={{ label: 'Open Optimizer', href: '/optimizer' }}
+        >
+          Try the Configuration Optimizer to determine the best settings for your workload before setting up.
+        </InfoBanner>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -172,6 +269,7 @@ export default function SetupPage() {
           <StepMethod
             method={method}
             setMethod={setMethod}
+            onBack={() => setStep('choose')}
             onNext={() => setStep('source')}
           />
         )}
@@ -203,10 +301,12 @@ export default function SetupPage() {
 function StepMethod({
   method,
   setMethod,
+  onBack,
   onNext
 }: {
   method: string;
   setMethod: (m: string) => void;
+  onBack: () => void;
   onNext: () => void;
 }) {
   const selectedMethod = INSTALLATION_METHODS.find(m => m.id === method);
@@ -278,7 +378,11 @@ function StepMethod({
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <button onClick={onBack} className="btn-secondary px-5 py-2.5">
+          <ChevronLeft className="w-4 h-4 mr-2" />
+          Back
+        </button>
         <button onClick={onNext} className="btn-primary px-6 py-3">
           Continue
           <ChevronRight className="w-4 h-4 ml-2" />

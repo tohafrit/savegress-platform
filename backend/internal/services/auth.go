@@ -25,10 +25,11 @@ var (
 
 // AuthService handles authentication
 type AuthService struct {
-	db           *repository.PostgresDB
-	redis        *repository.RedisClient
-	jwtSecret    []byte
-	emailService *EmailService
+	db             *repository.PostgresDB
+	redis          *repository.RedisClient
+	jwtSecret      []byte
+	emailService   *EmailService
+	licenseService *LicenseService
 }
 
 // NewAuthService creates a new auth service
@@ -38,6 +39,11 @@ func NewAuthService(db *repository.PostgresDB, redis *repository.RedisClient, jw
 		redis:     redis,
 		jwtSecret: []byte(jwtSecret),
 	}
+}
+
+// SetLicenseService sets the license service for auto-creating licenses on registration
+func (s *AuthService) SetLicenseService(licenseService *LicenseService) {
+	s.licenseService = licenseService
 }
 
 // SetEmailService sets the email service for auth operations
@@ -101,6 +107,15 @@ func (s *AuthService) Register(ctx context.Context, email, password, name, compa
 	`, user.ID, user.Email, user.PasswordHash, user.Name, user.Company, user.Role, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	// Auto-create Community license for new users
+	if s.licenseService != nil {
+		_, err = s.licenseService.CreateLicense(ctx, user.ID, "community", 365, "")
+		if err != nil {
+			// Log but don't fail registration - user can get license later
+			fmt.Printf("Warning: failed to create community license for user %s: %v\n", user.ID, err)
+		}
 	}
 
 	// Generate tokens

@@ -61,6 +61,10 @@ func main() {
 	// Initialize services
 	authService := services.NewAuthService(db, redis, cfg.JWTSecret)
 	licenseService := services.NewLicenseService(db, cfg.LicensePrivateKey)
+
+	// Connect services for auto-license creation on registration
+	authService.SetLicenseService(licenseService)
+
 	billingService := services.NewBillingService(cfg.StripeSecretKey, cfg.StripeWebhookSecret)
 	billingService.SetDB(db)
 	userService := services.NewUserService(db)
@@ -70,8 +74,23 @@ func main() {
 	pipelineService := services.NewPipelineService(db)
 	configService := services.NewConfigGeneratorService(connectionService, pipelineService)
 
+	// Initialize download service for personalized downloads
+	downloadService, err := services.NewDownloadService(context.Background(), services.DownloadConfig{
+		Region:          cfg.DownloadsRegion,
+		Bucket:          cfg.DownloadsBucket,
+		KeyPrefix:       cfg.DownloadsKeyPrefix,
+		AccessKeyID:     cfg.S3AccessKeyID,
+		SecretAccessKey: cfg.S3SecretAccessKey,
+		Endpoint:        cfg.S3Endpoint,
+		UsePathStyle:    cfg.S3UsePathStyle,
+	})
+	if err != nil {
+		log.Printf("Warning: Download service not configured: %v", err)
+	}
+
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService, emailService)
+	authHandler.SetLicenseService(licenseService)
 	licenseHandler := handlers.NewLicenseHandler(licenseService, authService)
 	billingHandler := handlers.NewBillingHandler(billingService, licenseService, userService, emailService)
 	userHandler := handlers.NewUserHandler(userService)
@@ -81,6 +100,12 @@ func main() {
 	connectionHandler := handlers.NewConnectionHandler(connectionService)
 	pipelineHandler := handlers.NewPipelineHandler(pipelineService, licenseService)
 	configHandler := handlers.NewConfigHandler(configService, licenseService)
+
+	// Personalized download handler (optional - only if download service is configured)
+	var personalizedDownloadHandler *handlers.PersonalizedDownloadHandler
+	if downloadService != nil {
+		personalizedDownloadHandler = handlers.NewPersonalizedDownloadHandler(downloadService, licenseService)
+	}
 
 	// Setup router
 	r := chi.NewRouter()
@@ -116,6 +141,7 @@ func main() {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", authHandler.Register)
 			r.Post("/login", authHandler.Login)
+			r.Post("/cli-login", authHandler.CLILogin) // CLI login returns license key
 			r.Post("/refresh", authHandler.RefreshToken)
 			r.Post("/forgot-password", authHandler.ForgotPassword)
 			r.Post("/reset-password", authHandler.ResetPassword)
@@ -181,6 +207,13 @@ func main() {
 			r.Route("/downloads", func(r chi.Router) {
 				r.Get("/", handlers.ListDownloads)
 				r.Get("/{product}/{version}", handlers.GetDownloadURL)
+
+				// Personalized downloads with embedded license
+				if personalizedDownloadHandler != nil {
+					r.Get("/info", personalizedDownloadHandler.GetDownloadInfo)
+					r.Get("/personalized/{product}/{version}/{platform}/{edition}", personalizedDownloadHandler.DownloadPersonalized)
+					r.Get("/install-script", personalizedDownloadHandler.GenerateInstallScript)
+				}
 			})
 
 			// Connections

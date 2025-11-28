@@ -54,7 +54,7 @@ services:
       - REDIS_URL=redis://:localdev123@redis:6379/0
       - ALLOWED_ORIGINS=http://localhost,http://localhost:3000
       - JWT_SECRET=local-dev-jwt-secret-not-for-production
-      - LICENSE_PRIVATE_KEY=
+      - LICENSE_PRIVATE_KEY=Z6EZafVDmet8rJs6SOP8xCycrmlJNZ72Q5IkpmMV+WnGy2PNZhYbElLNOspttNIGsoZ8+4w1ASx3/UuP1sd5bw==
       - STRIPE_SECRET_KEY=sk_test_fake
       - STRIPE_WEBHOOK_SECRET=whsec_fake
       - TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA

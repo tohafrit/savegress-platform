@@ -167,6 +167,11 @@
     border-color: rgba(0, 180, 216, 0.60);
   }
 
+  /* Allow overflow for badges/labels that extend outside card */
+  .card-dark.overflow-visible {
+    overflow: visible;
+  }
+
   /* Card with gradient border - for Savegress schema box */
   .card-gradient {
     @apply relative rounded-[25px] overflow-hidden;

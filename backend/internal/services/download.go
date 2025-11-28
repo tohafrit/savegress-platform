@@ -283,3 +283,64 @@ func (s *DownloadService) UploadRelease(ctx context.Context, product, version, e
 
 	return nil
 }
+
+// ============================================
+// PERSONALIZED DOWNLOADS
+// ============================================
+// These functions create downloads with embedded license keys
+
+// LicensePlaceholder is embedded in binaries during build and replaced at download time
+// Must be exactly 512 bytes to allow in-place replacement
+const LicensePlaceholder = "SAVEGRESS_LICENSE_PLACEHOLDER_" +
+	"0000000000000000000000000000000000000000000000000000000000000000" +
+	"0000000000000000000000000000000000000000000000000000000000000000" +
+	"0000000000000000000000000000000000000000000000000000000000000000" +
+	"0000000000000000000000000000000000000000000000000000000000000000" +
+	"0000000000000000000000000000000000000000000000000000000000000000" +
+	"0000000000000000000000000000000000000000000000000000000000000000" +
+	"0000000000000000000000000000000000000000000000000"
+
+// GetPersonalizedBinary downloads a binary and embeds the user's license key
+func (s *DownloadService) GetPersonalizedBinary(ctx context.Context, product, version, edition, platform, licenseKey string) ([]byte, string, error) {
+	key := s.getReleaseKey(product, version, edition, platform)
+
+	// Download the template binary from S3
+	result, err := s.s3Client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to download binary: %w", err)
+	}
+	defer result.Body.Close()
+
+	// Read the binary
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(result.Body); err != nil {
+		return nil, "", fmt.Errorf("failed to read binary: %w", err)
+	}
+	binary := buf.Bytes()
+
+	// Replace the placeholder with the actual license key
+	binary = s.embedLicense(binary, licenseKey)
+
+	filename := s.getFilename(product, version, edition, platform)
+	return binary, filename, nil
+}
+
+// embedLicense replaces the license placeholder in a binary with the actual license key
+func (s *DownloadService) embedLicense(binary []byte, licenseKey string) []byte {
+	placeholder := []byte(LicensePlaceholder)
+
+	// Pad license key to match placeholder length
+	paddedKey := make([]byte, len(placeholder))
+	copy(paddedKey, []byte(licenseKey))
+
+	// Replace placeholder with padded license key
+	return bytes.Replace(binary, placeholder, paddedKey, 1)
+}
+
+// HasLicensePlaceholder checks if a binary has the license placeholder
+func (s *DownloadService) HasLicensePlaceholder(binary []byte) bool {
+	return bytes.Contains(binary, []byte("SAVEGRESS_LICENSE_PLACEHOLDER_"))
+}

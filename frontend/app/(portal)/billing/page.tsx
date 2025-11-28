@@ -12,10 +12,11 @@ const plans = [
     price: '$99',
     period: '/month',
     features: [
-      'Up to 5 instances',
-      '50,000 events/sec',
+      'Up to 10 sources',
+      '100 tables, 50k events/sec',
+      'MongoDB, SQL Server, DynamoDB',
+      'Kafka output, compression',
       'Email support',
-      'Standard compression',
     ],
   },
   {
@@ -25,12 +26,11 @@ const plans = [
     period: '/month',
     popular: true,
     features: [
-      'Unlimited instances',
+      'Unlimited sources & tables',
       'Unlimited throughput',
-      'Priority support',
-      'Advanced compression',
-      'SSO / SAML',
-      'Custom SLA',
+      '+ Oracle connector',
+      'HA cluster, SSO, audit logs',
+      'Priority support & SLA',
     ],
   },
 ];
@@ -40,6 +40,7 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -48,7 +49,7 @@ export default function BillingPage() {
         api.getInvoices(),
       ]);
 
-      if (subRes.data) setSubscription(subRes.data);
+      if (subRes.data?.subscription) setSubscription(subRes.data.subscription);
       if (invRes.data) setInvoices(invRes.data.invoices);
       setIsLoading(false);
     }
@@ -59,6 +60,22 @@ export default function BillingPage() {
     const { data } = await api.createPortalSession();
     if (data?.url) {
       window.location.href = data.url;
+    }
+  }
+
+  async function handleSubscribe(plan: string) {
+    setCheckoutLoading(plan);
+
+    const successUrl = `${window.location.origin}/licenses?checkout=success`;
+    const cancelUrl = `${window.location.origin}/billing?checkout=canceled`;
+
+    const { data, error } = await api.createSubscription(plan, successUrl, cancelUrl);
+
+    if (data?.checkout_url) {
+      window.location.href = data.checkout_url;
+    } else {
+      alert(error || 'Failed to start checkout');
+      setCheckoutLoading(null);
     }
   }
 
@@ -117,11 +134,11 @@ export default function BillingPage() {
 
       {/* Plans */}
       {!subscription && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-4 pt-4">
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className={`card-dark p-6 relative ${
+              className={`card-dark p-6 relative overflow-visible ${
                 plan.popular ? 'border-accent-cyan' : ''
               }`}
             >
@@ -147,14 +164,15 @@ export default function BillingPage() {
                 ))}
               </ul>
               <button
-                onClick={() => {/* TODO: Implement Stripe checkout */}}
-                className={`mt-6 w-full py-2.5 px-4 rounded-[20px] text-sm font-medium transition-all ${
+                onClick={() => handleSubscribe(plan.id)}
+                disabled={checkoutLoading !== null}
+                className={`mt-6 w-full py-2.5 px-4 rounded-[20px] text-sm font-medium transition-all disabled:opacity-50 ${
                   plan.popular
                     ? 'btn-primary'
                     : 'btn-secondary'
                 }`}
               >
-                Upgrade to {plan.name}
+                {checkoutLoading === plan.id ? 'Redirecting...' : `Upgrade to ${plan.name}`}
               </button>
             </div>
           ))}

@@ -190,6 +190,79 @@ func (c *LicenseClient) Deactivate(licenseID, instanceID, hardwareID string) err
 	return nil
 }
 
+// LoginRequest for user authentication
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// LoginResponse from authentication
+type LoginResponse struct {
+	Success    bool   `json:"success"`
+	LicenseKey string `json:"license_key"`
+	Edition    string `json:"edition"`
+	Message    string `json:"message,omitempty"`
+	Token      string `json:"token,omitempty"` // JWT token for further requests
+}
+
+// Login authenticates a user and retrieves their license key
+func (c *LicenseClient) Login(email, password string) (*LoginResponse, error) {
+	req := LoginRequest{
+		Email:    email,
+		Password: password,
+	}
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", c.baseURL+"/api/v1/auth/cli-login", bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("User-Agent", "Savegress-Engine/1.0")
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("server unavailable: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("invalid email or password")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		var errResp struct {
+			Error string `json:"error"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&errResp); err == nil && errResp.Error != "" {
+			return nil, fmt.Errorf("login failed: %s", errResp.Error)
+		}
+		return nil, fmt.Errorf("login failed: %s", resp.Status)
+	}
+
+	var loginResp LoginResponse
+	if err := json.NewDecoder(resp.Body).Decode(&loginResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	if !loginResp.Success {
+		if loginResp.Message != "" {
+			return nil, fmt.Errorf("login failed: %s", loginResp.Message)
+		}
+		return nil, fmt.Errorf("login failed")
+	}
+
+	return &loginResp, nil
+}
+
 // GetLicenseInfo retrieves license information from server
 func (c *LicenseClient) GetLicenseInfo(licenseID string) (*License, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
