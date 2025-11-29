@@ -6,9 +6,9 @@ Savegress offers three editions designed for different use cases and team sizes.
 
 | | Community | Pro | Enterprise |
 |---|:---------:|:---:|:----------:|
-| **Price** | Free Forever | Contact Sales | Contact Sales |
+| **Price** | Free Forever | $499/month | Custom pricing |
 | **Target** | Startups, POC, Dev | Scale-ups, Production | Large Orgs, Regulated |
-| **Support** | Community | Email (24h) | Dedicated + SLA |
+| **Support** | Community | Email (24h SLA) | Dedicated + SLA 99.9% |
 
 ---
 
