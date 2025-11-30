@@ -26,7 +26,8 @@ BIN_PATH := ./bin
 
 .PHONY: help build build-linux clean deps test test-coverage lint fmt run dev \
         docker-dev docker-dev-build docker-dev-down docker-dev-logs docker-dev-clean \
-        frontend deploy deploy-quick server-logs server-status server-ssh server-restart
+        frontend deploy deploy-quick deploy-rebuild server-logs server-status server-ssh \
+        server-restart server-down server-up
 
 # Default target
 help:
@@ -56,12 +57,15 @@ help:
 	@echo "    make docker-dev-clean - Stop and remove containers, volumes"
 	@echo ""
 	@echo "  Deployment:"
-	@echo "    make deploy       - Full deploy (sync + rebuild)"
-	@echo "    make deploy-quick - Quick deploy (sync + restart)"
-	@echo "    make server-logs  - View server logs"
-	@echo "    make server-status- Check server status"
-	@echo "    make server-ssh   - SSH into server"
-	@echo "    make server-restart - Restart services"
+	@echo "    make deploy        - Full deploy (sync + build + up)"
+	@echo "    make deploy-quick  - Quick deploy (sync + up)"
+	@echo "    make deploy-rebuild- Full rebuild (no cache)"
+	@echo "    make server-logs   - View server logs"
+	@echo "    make server-status - Check server status"
+	@echo "    make server-ssh    - SSH into server"
+	@echo "    make server-restart- Restart services"
+	@echo "    make server-down   - Stop services"
+	@echo "    make server-up     - Start services"
 
 # ==================== Backend (Go) ====================
 
@@ -142,25 +146,49 @@ docker-dev-clean:
 
 # ==================== Deployment ====================
 
+PROD_SERVER := $(SERVER_USER)@$(SERVER_IP)
+PROD_DIR := $(SERVER_PATH)
+
 deploy:
 	@echo ">>> Deploying to $(SERVER_IP)..."
-	./scripts/deploy.sh
+	ssh $(PROD_SERVER) "mkdir -p $(PROD_DIR)"
+	rsync -avz --progress --delete --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='bin' --exclude='out' \
+		--exclude='coverage.out' --exclude='coverage.html' --exclude='.env.local' \
+		./ $(PROD_SERVER):$(PROD_DIR)/
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose build"
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose up -d"
+	@echo ">>> Deployment complete!"
 
 deploy-quick:
-	@echo ">>> Quick deploy to $(SERVER_IP)..."
-	./scripts/deploy-quick.sh
+	@echo ">>> Quick deploy to $(SERVER_IP) (sync + restart)..."
+	rsync -avz --progress --delete --exclude='.git' --exclude='node_modules' --exclude='.next' --exclude='bin' --exclude='out' \
+		--exclude='coverage.out' --exclude='coverage.html' --exclude='.env.local' \
+		./ $(PROD_SERVER):$(PROD_DIR)/
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose up -d"
+	@echo ">>> Quick deployment complete!"
+
+deploy-rebuild:
+	@echo ">>> Full rebuild deployment to $(SERVER_IP)..."
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose build --no-cache && docker compose up -d"
+	@echo ">>> Rebuild deployment complete!"
 
 server-logs:
-	ssh $(SERVER_USER)@$(SERVER_IP) "cd $(SERVER_PATH)/docker && docker compose logs -f"
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose logs -f"
 
 server-status:
-	ssh $(SERVER_USER)@$(SERVER_IP) "cd $(SERVER_PATH)/docker && docker compose ps"
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose ps"
 
 server-ssh:
-	ssh $(SERVER_USER)@$(SERVER_IP)
+	ssh $(PROD_SERVER)
 
 server-restart:
-	ssh $(SERVER_USER)@$(SERVER_IP) "cd $(SERVER_PATH)/docker && docker compose restart"
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose restart"
+
+server-down:
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose down"
+
+server-up:
+	ssh $(PROD_SERVER) "cd $(PROD_DIR)/docker && docker compose up -d"
 
 # ==================== Database ====================
 
