@@ -10,7 +10,7 @@ import (
 
 	"github.com/savegress/platform/backend/internal/models"
 	"github.com/savegress/platform/backend/internal/repository"
-	"github.com/savegress/platform/backend/pkg/license"
+	"github.com/savegress/sdk/pkg/license"
 )
 
 var (

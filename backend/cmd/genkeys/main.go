@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/savegress/platform/backend/pkg/license"
+	"github.com/savegress/sdk/pkg/license"
 )
 
 func main() {
